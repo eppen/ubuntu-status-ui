@@ -43,5 +43,6 @@ swift run
 - 服务器管理（密码进 Keychain / 私钥导入沙盒）
 - CPU / 内存 / 磁盘 / 网络 / 温度 / 负载 / Top 进程
 - Docker：版本、运行数、容器 CPU/内存/端口
+- OpenClaw：Gateway 可达性、服务状态、Agent / 会话 / 任务
 
-SSH 用户需能执行 `docker`（加入 `docker` 组）。
+SSH 用户需能执行 `docker`（加入 `docker` 组）。远端需安装并可执行 `openclaw`（PATH 含 `~/.local/node/bin` 等）。

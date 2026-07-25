@@ -13,6 +13,7 @@ struct RawMetricsPayload: Codable {
     var temp_c: Double?
     var top: [ProcessInfo]
     var docker: DockerInfo?
+    var openclaw: OpenClawInfo?
 
     struct LoadAvg: Codable {
         var l1: Double
@@ -89,6 +90,80 @@ struct RawMetricsPayload: Codable {
         var mem_usage: String
         var net_io: String
     }
+
+    struct OpenClawInfo: Codable, Equatable {
+        var available: Bool
+        var error: String?
+        var version: String?
+        var update_channel: String?
+        var gateway: OpenClawGateway?
+        var service: OpenClawService?
+        var sessions_count: Int
+        var default_model: String?
+        var agents: [OpenClawAgent]
+        var tasks: OpenClawTasks?
+        var channels: [OpenClawChannel]
+        var recent_sessions: [OpenClawSession]
+    }
+
+    struct OpenClawGateway: Codable, Equatable {
+        var mode: String
+        var url: String
+        var reachable: Bool
+        var misconfigured: Bool
+        var latency_ms: Int?
+        var host: String
+        var ip: String
+        var version: String
+        var error: String?
+    }
+
+    struct OpenClawService: Codable, Equatable {
+        var label: String
+        var installed: Bool
+        var loaded: Bool
+        var status: String
+        var state: String
+        var pid: Int?
+        var short: String
+    }
+
+    struct OpenClawAgent: Codable, Identifiable, Equatable {
+        var id: String
+        var sessions: Int
+        var last_active_ms: Int?
+        var bootstrap_pending: Bool
+    }
+
+    struct OpenClawTasks: Codable, Equatable {
+        var total: Int
+        var active: Int
+        var failures: Int
+        var running: Int
+        var queued: Int
+        var succeeded: Int
+        var failed: Int
+    }
+
+    struct OpenClawChannel: Codable, Identifiable, Equatable {
+        var name: String
+        var status: String
+
+        var id: String { "\(name)|\(status)" }
+    }
+
+    struct OpenClawSession: Codable, Identifiable, Equatable {
+        var agent_id: String
+        var key: String
+        var kind: String
+        var model: String
+        var age_ms: Int?
+        var percent_used: Int?
+        var total_tokens: Int?
+        var aborted: Bool
+
+        var id: String { "\(agent_id):\(key):\(kind)" }
+    }
 }
 
 struct MetricsSnapshot: Equatable {
@@ -118,6 +193,7 @@ struct MetricsSnapshot: Equatable {
     var tempC: Double?
     var top: [RawMetricsPayload.ProcessInfo]
     var docker: RawMetricsPayload.DockerInfo?
+    var openclaw: RawMetricsPayload.OpenClawInfo?
 
     static let empty = MetricsSnapshot(
         ts: .distantPast,
@@ -131,7 +207,8 @@ struct MetricsSnapshot: Equatable {
         diskReadBps: 0, diskWriteBps: 0,
         tempC: nil,
         top: [],
-        docker: nil
+        docker: nil,
+        openclaw: nil
     )
 }
 
@@ -221,7 +298,8 @@ enum MetricsMath {
             diskWriteBps: diskWrite,
             tempC: raw.temp_c,
             top: raw.top,
-            docker: raw.docker
+            docker: raw.docker,
+            openclaw: raw.openclaw
         )
         return (snapshot, current)
     }

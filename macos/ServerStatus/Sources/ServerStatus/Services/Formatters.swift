@@ -27,4 +27,11 @@ enum Formatters {
     static func percent(_ value: Double) -> String {
         String(format: "%.1f%%", value)
     }
+
+    static func compactCount(_ value: Int) -> String {
+        let v = abs(value)
+        if v < 1000 { return "\(value)" }
+        if v < 1_000_000 { return String(format: "%.1fk", Double(value) / 1000) }
+        return String(format: "%.1fM", Double(value) / 1_000_000)
+    }
 }

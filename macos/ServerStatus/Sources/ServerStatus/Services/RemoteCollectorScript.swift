@@ -529,6 +529,182 @@ def parse_pct(v):
     except ValueError:
         return None
 
+def find_openclaw_bin():
+    found = shutil.which("openclaw")
+    if found:
+        return found
+    home = os.path.expanduser("~")
+    candidates = [
+        os.path.join(home, ".local/node/bin/openclaw"),
+        os.path.join(home, ".local/bin/openclaw"),
+        "/opt/homebrew/bin/openclaw",
+        "/usr/local/bin/openclaw",
+    ]
+    # npm global under ~/.local/node-*/bin
+    local = os.path.join(home, ".local")
+    try:
+        for name in os.listdir(local):
+            if name.startswith("node-"):
+                p = os.path.join(local, name, "bin", "openclaw")
+                candidates.append(p)
+    except OSError:
+        pass
+    for p in candidates:
+        try:
+            if os.path.isfile(p) and os.access(p, os.X_OK):
+                return p
+        except OSError:
+            continue
+    return None
+
+def openclaw_status():
+    info = {
+        "available": False,
+        "error": None,
+        "version": None,
+        "update_channel": None,
+        "gateway": None,
+        "service": None,
+        "sessions_count": 0,
+        "default_model": None,
+        "agents": [],
+        "tasks": None,
+        "channels": [],
+        "recent_sessions": [],
+    }
+    claw = find_openclaw_bin()
+    if not claw:
+        info["error"] = "未安装 openclaw"
+        return info
+
+    try:
+        out = subprocess.check_output(
+            [claw, "status", "--json"],
+            text=True,
+            stderr=subprocess.STDOUT,
+            timeout=12,
+            env=os.environ.copy(),
+        )
+    except subprocess.TimeoutExpired:
+        info["error"] = "openclaw status 超时"
+        return info
+    except Exception as e:
+        err_out = ""
+        if isinstance(e, subprocess.CalledProcessError):
+            err_out = e.output or ""
+        msg = (str(err_out) or str(e))[:180].strip()
+        info["error"] = msg or "openclaw 不可用"
+        return info
+
+    raw = out.strip()
+    # CLI may print warnings before JSON
+    start = raw.find("{")
+    end = raw.rfind("}")
+    if start < 0 or end <= start:
+        info["error"] = "无法解析 openclaw status JSON"
+        return info
+    try:
+        data = json.loads(raw[start:end + 1])
+    except Exception:
+        info["error"] = "openclaw status JSON 无效"
+        return info
+
+    info["available"] = True
+    info["version"] = data.get("runtimeVersion") or None
+    info["update_channel"] = data.get("updateChannel") or None
+
+    gw = data.get("gateway") or {}
+    if isinstance(gw, dict):
+        self_info = gw.get("self") if isinstance(gw.get("self"), dict) else {}
+        info["gateway"] = {
+            "mode": gw.get("mode") or "",
+            "url": gw.get("url") or "",
+            "reachable": bool(gw.get("reachable")),
+            "misconfigured": bool(gw.get("misconfigured")),
+            "latency_ms": gw.get("connectLatencyMs"),
+            "host": (self_info or {}).get("host") or "",
+            "ip": (self_info or {}).get("ip") or "",
+            "version": (self_info or {}).get("version") or info["version"] or "",
+            "error": gw.get("error"),
+        }
+
+    svc = data.get("gatewayService") or {}
+    if isinstance(svc, dict):
+        runtime = svc.get("runtime") if isinstance(svc.get("runtime"), dict) else {}
+        info["service"] = {
+            "label": svc.get("label") or "",
+            "installed": bool(svc.get("installed")),
+            "loaded": bool(svc.get("loaded")),
+            "status": (runtime or {}).get("status") or "",
+            "state": (runtime or {}).get("state") or "",
+            "pid": (runtime or {}).get("pid"),
+            "short": svc.get("runtimeShort") or "",
+        }
+
+    sessions = data.get("sessions") or {}
+    if isinstance(sessions, dict):
+        info["sessions_count"] = int(sessions.get("count") or 0)
+        defaults = sessions.get("defaults") if isinstance(sessions.get("defaults"), dict) else {}
+        info["default_model"] = (defaults or {}).get("model") or None
+        recent = sessions.get("recent") or []
+        items = []
+        if isinstance(recent, list):
+            for s in recent[:8]:
+                if not isinstance(s, dict):
+                    continue
+                key = str(s.get("key") or "")
+                # shorten key for UI: keep last segment
+                short_key = key.split(":")[-1] if key else (s.get("sessionId") or "")[:12]
+                items.append({
+                    "agent_id": s.get("agentId") or "",
+                    "key": short_key[:64],
+                    "kind": s.get("kind") or "",
+                    "model": s.get("model") or "",
+                    "age_ms": s.get("age"),
+                    "percent_used": s.get("percentUsed"),
+                    "total_tokens": s.get("totalTokens"),
+                    "aborted": bool(s.get("abortedLastRun")),
+                })
+        info["recent_sessions"] = items
+
+    agents_block = data.get("agents") or {}
+    agents_list = []
+    if isinstance(agents_block, dict):
+        for a in (agents_block.get("agents") or []):
+            if not isinstance(a, dict):
+                continue
+            agents_list.append({
+                "id": a.get("id") or "",
+                "sessions": int(a.get("sessionsCount") or 0),
+                "last_active_ms": a.get("lastActiveAgeMs"),
+                "bootstrap_pending": bool(a.get("bootstrapPending")),
+            })
+    info["agents"] = agents_list
+
+    tasks = data.get("tasks") or {}
+    if isinstance(tasks, dict):
+        by_status = tasks.get("byStatus") if isinstance(tasks.get("byStatus"), dict) else {}
+        info["tasks"] = {
+            "total": int(tasks.get("total") or 0),
+            "active": int(tasks.get("active") or 0),
+            "failures": int(tasks.get("failures") or 0),
+            "running": int((by_status or {}).get("running") or 0),
+            "queued": int((by_status or {}).get("queued") or 0),
+            "succeeded": int((by_status or {}).get("succeeded") or 0),
+            "failed": int((by_status or {}).get("failed") or 0),
+        }
+
+    channels = []
+    for ch in (data.get("channelSummary") or []):
+        if isinstance(ch, str):
+            channels.append({"name": ch[:80], "status": ""})
+        elif isinstance(ch, dict):
+            name = ch.get("name") or ch.get("id") or ch.get("channel") or ch.get("label") or ""
+            status = ch.get("status") or ch.get("state") or ch.get("summary") or ""
+            channels.append({"name": str(name)[:80], "status": str(status)[:80]})
+    info["channels"] = channels[:20]
+    return info
+
 total, idle, cores = cpu_ticks()
 l1, l5, l15 = loadavg()
 mem = meminfo()
@@ -546,14 +722,15 @@ payload = {
     "temp_c": temp_c(),
     "top": top_procs(),
     "docker": docker_status(),
+    "openclaw": openclaw_status(),
 }
 print(json.dumps(payload, separators=(",", ":")), flush=True)
 """#
 
     static func remoteCommand() -> String {
         let b64 = Data(source.utf8).base64EncodedString()
-        // Expand PATH for Docker Desktop / Homebrew; macOS base64 uses -D/--decode
-        return #"bash --noprofile --norc -c "export PATH=\"$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/Applications/Docker.app/Contents/Resources/bin:/usr/bin:/bin:$PATH\"; echo \#(b64) | (base64 --decode 2>/dev/null || base64 -D 2>/dev/null || base64 -d) | /usr/bin/env python3 -u""#
+        // Expand PATH for Docker Desktop / Homebrew / OpenClaw; macOS base64 uses -D/--decode
+        return #"bash --noprofile --norc -c "export PATH=\"$HOME/.local/node/bin:$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/Applications/Docker.app/Contents/Resources/bin:/usr/bin:/bin:$PATH\"; echo \#(b64) | (base64 --decode 2>/dev/null || base64 -D 2>/dev/null || base64 -d) | /usr/bin/env python3 -u""#
     }
 
     static func extractJSONObject(from raw: String) -> String? {

@@ -50,6 +50,7 @@ struct DashboardView: View {
                     chip("温度", model.metrics.tempC.map { String(format: "%.1f°C", $0) } ?? "—")
                     chip("Load", String(format: "%.2f / %.2f / %.2f", model.metrics.load1, model.metrics.load5, model.metrics.load15))
                     chip("Docker", dockerChipText)
+                    chip("OpenClaw", openclawChipText)
                 }
             }
         }
@@ -144,6 +145,7 @@ struct DashboardView: View {
 
             ProcessTableView(items: m.top)
             DockerPanelView(docker: m.docker)
+            OpenClawPanelView(openclaw: m.openclaw)
         }
     }
 
@@ -151,6 +153,18 @@ struct DashboardView: View {
         guard let d = model.metrics.docker else { return "—" }
         if !d.available { return "不可用" }
         return "\(d.running) 运行"
+    }
+
+    private var openclawChipText: String {
+        guard let o = model.metrics.openclaw else { return "—" }
+        if !o.available { return "未安装" }
+        if let svc = o.service, !svc.status.isEmpty {
+            return svc.status
+        }
+        if let gw = o.gateway {
+            return gw.reachable ? "可达" : "不可达"
+        }
+        return "就绪"
     }
 
     private func timeString(_ date: Date) -> String {
