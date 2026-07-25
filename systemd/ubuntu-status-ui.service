@@ -1,0 +1,16 @@
+[Unit]
+Description=Ubuntu Status UI
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=liu
+WorkingDirectory=/home/liu/ubuntu-status-ui
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/home/liu/ubuntu-status-ui/.venv/bin/uvicorn app:app --host 0.0.0.0 --port 8899
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,340 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		48D921E30B9049FEAD53E4BB /* MetricsSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6700CED266B4E089D21292B /* MetricsSnapshot.swift */; };
+		AE684EDCD1804C9FAF162388 /* ServerProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61AC4C22849A4B1E8EA527D1 /* ServerProfile.swift */; };
+		2672DFCCAAC241078633D735 /* ServerStatusApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270C53629E2C4901B8CE994E /* ServerStatusApp.swift */; };
+		143A94BB301B4BCDB114E5AA /* AppBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA2567CE6B4846B681CD89CA /* AppBootstrap.swift */; };
+		5D199C079E674096A558D817 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF9F2487DE014B559CF103E6 /* AppModel.swift */; };
+		12ED7C62E645489FB3B04A13 /* Formatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77795FDBF1E245199A9A8FA3 /* Formatters.swift */; };
+		D2BCAEDD987A4CFB8BF91C7B /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5E989F664C74279B35F9EBD /* KeychainStore.swift */; };
+		D4EA6C541C46470486F44341 /* PlatformChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A06DF7AF5274387AB31E45E /* PlatformChrome.swift */; };
+		DFBE110B956B47EBA481AEB7 /* PrivateKeyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2630174924D440B8BDD4ACE7 /* PrivateKeyStore.swift */; };
+		0D2238ED943D4FB399858B75 /* RemoteCollectorScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4853E72672C444F951808D5 /* RemoteCollectorScript.swift */; };
+		DE565A36CF54490D939FB30D /* SSHSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E612AD0D5D24E428A35AABE /* SSHSession.swift */; };
+		1B3FAEBADE3B4041919D9EFE /* AddServerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4B59E57FA7942BA8504088E /* AddServerView.swift */; };
+		9ABF5833D30547B194DD393F /* DockerPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E918714720848F0B8B0526A /* DockerPanelView.swift */; };
+		383B4F7D6CD84717B3F0BB8D /* GaugeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7397F77D6DFB4DD2A826CFE2 /* GaugeView.swift */; };
+		5FEFE7E1BE2E4EA69B7A696F /* ProcessTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5A0EE7E205945078FB3C6B9 /* ProcessTableView.swift */; };
+		221432049060437F933C2974 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60CF51C9AA8049BF98759E34 /* ContentView.swift */; };
+		4383924F8EE2445293C9B628 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41CE95177B264A79951A1293 /* DashboardView.swift */; };
+		7CBEC1092EFA435687B7341D /* ServerListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F57EE2B10F7646A7B15F42BA /* ServerListView.swift */; };
+		A10000000000000000000020 /* Citadel in Frameworks */ = {isa = PBXBuildFile; productRef = A1000000000000000000000B /* Citadel */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		E6700CED266B4E089D21292B /* MetricsSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/MetricsSnapshot.swift"; sourceTree = "<group>"; };
+		61AC4C22849A4B1E8EA527D1 /* ServerProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/ServerProfile.swift"; sourceTree = "<group>"; };
+		270C53629E2C4901B8CE994E /* ServerStatusApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ServerStatusApp.swift"; sourceTree = "<group>"; };
+		DA2567CE6B4846B681CD89CA /* AppBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/AppBootstrap.swift"; sourceTree = "<group>"; };
+		CF9F2487DE014B559CF103E6 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/AppModel.swift"; sourceTree = "<group>"; };
+		77795FDBF1E245199A9A8FA3 /* Formatters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/Formatters.swift"; sourceTree = "<group>"; };
+		A5E989F664C74279B35F9EBD /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/KeychainStore.swift"; sourceTree = "<group>"; };
+		8A06DF7AF5274387AB31E45E /* PlatformChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/PlatformChrome.swift"; sourceTree = "<group>"; };
+		2630174924D440B8BDD4ACE7 /* PrivateKeyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/PrivateKeyStore.swift"; sourceTree = "<group>"; };
+		A4853E72672C444F951808D5 /* RemoteCollectorScript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/RemoteCollectorScript.swift"; sourceTree = "<group>"; };
+		3E612AD0D5D24E428A35AABE /* SSHSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/SSHSession.swift"; sourceTree = "<group>"; };
+		F4B59E57FA7942BA8504088E /* AddServerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/AddServerView.swift"; sourceTree = "<group>"; };
+		4E918714720848F0B8B0526A /* DockerPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Components/DockerPanelView.swift"; sourceTree = "<group>"; };
+		7397F77D6DFB4DD2A826CFE2 /* GaugeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Components/GaugeView.swift"; sourceTree = "<group>"; };
+		F5A0EE7E205945078FB3C6B9 /* ProcessTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Components/ProcessTableView.swift"; sourceTree = "<group>"; };
+		60CF51C9AA8049BF98759E34 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/ContentView.swift"; sourceTree = "<group>"; };
+		41CE95177B264A79951A1293 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/DashboardView.swift"; sourceTree = "<group>"; };
+		F57EE2B10F7646A7B15F42BA /* ServerListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/ServerListView.swift"; sourceTree = "<group>"; };
+		A10000000000000000000006 /* ServerStatus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ServerStatus.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A10000000000000000000004 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000020 /* Citadel in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A10000000000000000000008 = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000009 /* ServerStatus */,
+				A10000000000000000000007 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A10000000000000000000009 /* ServerStatus */ = {
+			isa = PBXGroup;
+			children = (
+				E6700CED266B4E089D21292B /* MetricsSnapshot.swift */,
+				61AC4C22849A4B1E8EA527D1 /* ServerProfile.swift */,
+				270C53629E2C4901B8CE994E /* ServerStatusApp.swift */,
+				DA2567CE6B4846B681CD89CA /* AppBootstrap.swift */,
+				CF9F2487DE014B559CF103E6 /* AppModel.swift */,
+				77795FDBF1E245199A9A8FA3 /* Formatters.swift */,
+				A5E989F664C74279B35F9EBD /* KeychainStore.swift */,
+				8A06DF7AF5274387AB31E45E /* PlatformChrome.swift */,
+				2630174924D440B8BDD4ACE7 /* PrivateKeyStore.swift */,
+				A4853E72672C444F951808D5 /* RemoteCollectorScript.swift */,
+				3E612AD0D5D24E428A35AABE /* SSHSession.swift */,
+				F4B59E57FA7942BA8504088E /* AddServerView.swift */,
+				4E918714720848F0B8B0526A /* DockerPanelView.swift */,
+				7397F77D6DFB4DD2A826CFE2 /* GaugeView.swift */,
+				F5A0EE7E205945078FB3C6B9 /* ProcessTableView.swift */,
+				60CF51C9AA8049BF98759E34 /* ContentView.swift */,
+				41CE95177B264A79951A1293 /* DashboardView.swift */,
+				F57EE2B10F7646A7B15F42BA /* ServerListView.swift */,
+			);
+			name = ServerStatus;
+			path = Sources/ServerStatus;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000007 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000006 /* ServerStatus.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A10000000000000000000002 /* ServerStatus */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A1000000000000000000000D /* Build configuration list for PBXNativeTarget "ServerStatus" */;
+			buildPhases = (
+				A10000000000000000000003 /* Sources */,
+				A10000000000000000000004 /* Frameworks */,
+				A10000000000000000000005 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ServerStatus;
+			packageProductDependencies = (
+				A1000000000000000000000B /* Citadel */,
+			);
+			productName = ServerStatus;
+			productReference = A10000000000000000000006 /* ServerStatus.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A10000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					A10000000000000000000002 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = A1000000000000000000000C /* Build configuration list for PBXProject "ServerStatus" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A10000000000000000000008;
+			packageReferences = (
+				A1000000000000000000000A /* XCRemoteSwiftPackageReference "Citadel" */,
+			);
+			productRefGroup = A10000000000000000000007 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A10000000000000000000002 /* ServerStatus */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A10000000000000000000005 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A10000000000000000000003 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				48D921E30B9049FEAD53E4BB /* MetricsSnapshot.swift in Sources */,
+				AE684EDCD1804C9FAF162388 /* ServerProfile.swift in Sources */,
+				2672DFCCAAC241078633D735 /* ServerStatusApp.swift in Sources */,
+				143A94BB301B4BCDB114E5AA /* AppBootstrap.swift in Sources */,
+				5D199C079E674096A558D817 /* AppModel.swift in Sources */,
+				12ED7C62E645489FB3B04A13 /* Formatters.swift in Sources */,
+				D2BCAEDD987A4CFB8BF91C7B /* KeychainStore.swift in Sources */,
+				D4EA6C541C46470486F44341 /* PlatformChrome.swift in Sources */,
+				DFBE110B956B47EBA481AEB7 /* PrivateKeyStore.swift in Sources */,
+				0D2238ED943D4FB399858B75 /* RemoteCollectorScript.swift in Sources */,
+				DE565A36CF54490D939FB30D /* SSHSession.swift in Sources */,
+				1B3FAEBADE3B4041919D9EFE /* AddServerView.swift in Sources */,
+				9ABF5833D30547B194DD393F /* DockerPanelView.swift in Sources */,
+				383B4F7D6CD84717B3F0BB8D /* GaugeView.swift in Sources */,
+				5FEFE7E1BE2E4EA69B7A696F /* ProcessTableView.swift in Sources */,
+				221432049060437F933C2974 /* ContentView.swift in Sources */,
+				4383924F8EE2445293C9B628 /* DashboardView.swift in Sources */,
+				7CBEC1092EFA435687B7341D /* ServerListView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A1000000000000000000000E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		A1000000000000000000000F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		A10000000000000000000010 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = ServerStatus;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "用于通过 SSH 连接局域网中的 Ubuntu 服务器";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.eppen.ServerStatus;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+			};
+			name = Debug;
+		};
+		A10000000000000000000011 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = ServerStatus;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "用于通过 SSH 连接局域网中的 Ubuntu 服务器";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.eppen.ServerStatus;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A1000000000000000000000C /* Build configuration list for PBXProject "ServerStatus" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1000000000000000000000E /* Debug */,
+				A1000000000000000000000F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A1000000000000000000000D /* Build configuration list for PBXNativeTarget "ServerStatus" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A10000000000000000000010 /* Debug */,
+				A10000000000000000000011 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A1000000000000000000000A /* XCRemoteSwiftPackageReference "Citadel" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/eppen/Citadel.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.11.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A1000000000000000000000B /* Citadel */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1000000000000000000000A /* XCRemoteSwiftPackageReference "Citadel" */;
+			productName = Citadel;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = A10000000000000000000001 /* Project object */;
+}

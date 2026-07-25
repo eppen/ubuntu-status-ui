@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ubuntu 状态面板</title>
+    <link rel="stylesheet" href="/static/style.css?v=1" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="topbar">
+        <div class="brand">
+          <div class="logo">U</div>
+          <div class="title">
+            <div class="name">Ubuntu 状态面板</div>
+            <div class="sub" id="subtitle">连接中…</div>
+          </div>
+        </div>
+        <div class="chips">
+          <div class="chip" id="chip-uptime">Uptime: -</div>
+          <div class="chip" id="chip-temp">温度: -</div>
+          <div class="chip" id="chip-load">Load: -</div>
+        </div>
+      </header>
+
+      <main class="grid">
+        <section class="card">
+          <div class="card-hd">
+            <div class="card-title">CPU</div>
+            <div class="card-meta"><span id="cpu-text">-</span></div>
+          </div>
+          <div class="gauge-row">
+            <div class="gauge" id="cpu-gauge">
+              <div class="gauge-center">
+                <div class="gauge-big" id="cpu-percent">-</div>
+                <div class="gauge-small" id="cpu-cores">-</div>
+              </div>
+            </div>
+            <div class="mini">
+              <div class="mini-kv"><span>系统</span><span id="cpu-load">-</span></div>
+              <div class="mini-kv"><span>时间</span><span id="ts">-</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-hd">
+            <div class="card-title">内存</div>
+            <div class="card-meta"><span id="mem-text">-</span></div>
+          </div>
+          <div class="gauge-row">
+            <div class="gauge" id="mem-gauge">
+              <div class="gauge-center">
+                <div class="gauge-big" id="mem-percent">-</div>
+                <div class="gauge-small" id="mem-free">-</div>
+              </div>
+            </div>
+            <div class="mini">
+              <div class="mini-kv"><span>已用</span><span id="mem-used">-</span></div>
+              <div class="mini-kv"><span>Swap</span><span id="swap-used">-</span></div>
+              <div class="mini-kv"><span>可用</span><span id="mem-avail">-</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-hd">
+            <div class="card-title">磁盘</div>
+            <div class="card-meta"><span id="disk-text">-</span></div>
+          </div>
+          <div class="gauge-row">
+            <div class="gauge" id="disk-gauge">
+              <div class="gauge-center">
+                <div class="gauge-big" id="disk-percent">-</div>
+                <div class="gauge-small" id="disk-free">-</div>
+              </div>
+            </div>
+            <div class="mini">
+              <div class="mini-kv"><span>读</span><span id="io-read">-</span></div>
+              <div class="mini-kv"><span>写</span><span id="io-write">-</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-hd">
+            <div class="card-title">网络</div>
+            <div class="card-meta"><span id="net-text">-</span></div>
+          </div>
+          <div class="net-rows">
+            <div class="net-row">
+              <div class="net-label">↑ 上传</div>
+              <div class="net-val" id="net-up">-</div>
+              <div class="bar"><div class="bar-fill" id="net-up-bar"></div></div>
+            </div>
+            <div class="net-row">
+              <div class="net-label">↓ 下载</div>
+              <div class="net-val" id="net-down">-</div>
+              <div class="bar"><div class="bar-fill" id="net-down-bar"></div></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card span2">
+          <div class="card-hd">
+            <div class="card-title">Top 进程</div>
+            <div class="card-meta">
+              <button class="btn" id="btn-refresh-top">刷新</button>
+            </div>
+          </div>
+          <div class="table" id="top-table">
+            <div class="tr th">
+              <div class="td pid">PID</div>
+              <div class="td name">进程</div>
+              <div class="td user">用户</div>
+              <div class="td cpu">CPU%</div>
+              <div class="td mem">RSS</div>
+            </div>
+            <div id="top-body"></div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="foot">
+        <div>刷新间隔 2s · 访问路径：`/` · API：`/api/metrics`</div>
+      </footer>
+    </div>
+
+    <script src="/static/app.js?v=1"></script>
+  </body>
+</html>

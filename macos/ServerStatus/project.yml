@@ -1,0 +1,48 @@
+name: ServerStatus
+options:
+  bundleIdPrefix: com.eppen
+  deploymentTarget:
+    iOS: "17.0"
+    macOS: "14.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    GENERATE_INFOPLIST_FILE: YES
+    INFOPLIST_KEY_CFBundleDisplayName: ServerStatus
+    INFOPLIST_KEY_UILaunchScreen_Generation: YES
+    INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+    INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+    INFOPLIST_KEY_NSLocalNetworkUsageDescription: "用于通过 SSH 连接局域网中的 Ubuntu 服务器"
+    CODE_SIGN_STYLE: Automatic
+packages:
+  Citadel:
+    url: https://github.com/eppen/Citadel.git
+    from: 0.11.0
+targets:
+  ServerStatus:
+    type: application
+    supportedDestinations: [iOS, macOS]
+    sources:
+      - path: Sources/ServerStatus
+    dependencies:
+      - package: Citadel
+        product: Citadel
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.eppen.ServerStatus
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SUPPORTS_MACCATALYST: NO
+        DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER: NO
+        ENABLE_HARDENED_RUNTIME: YES
+        COMBINE_HIDPI_IMAGES: YES
+schemes:
+  ServerStatus:
+    build:
+      targets:
+        ServerStatus: all
+    run:
+      config: Debug
