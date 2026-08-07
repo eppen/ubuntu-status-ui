@@ -1,7 +1,24 @@
 import SwiftUI
 
+private enum DashboardTab: String, CaseIterable, Identifiable {
+    case overview
+    case docker
+    case openclaw
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .overview: return "概览"
+        case .docker: return "Docker"
+        case .openclaw: return "OpenClaw"
+        }
+    }
+}
+
 struct DashboardView: View {
     @EnvironmentObject private var model: AppModel
+    @State private var selectedTab: DashboardTab = .overview
 
     var body: some View {
         VStack(spacing: 0) {
@@ -10,10 +27,9 @@ struct DashboardView: View {
             if model.selectedServer == nil {
                 emptyState
             } else {
-                ScrollView {
-                    metricsGrid
-                        .padding(20)
-                }
+                tabPicker
+                Divider()
+                tabContent
             }
         }
         .background(Color.ssWindowBackground)
@@ -56,6 +72,39 @@ struct DashboardView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 14)
+    }
+
+    private var tabPicker: some View {
+        Picker("页面", selection: $selectedTab) {
+            ForEach(DashboardTab.allCases) { tab in
+                Text(tab.title).tag(tab)
+            }
+        }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .padding(.horizontal, 20)
+        .padding(.vertical, 10)
+    }
+
+    @ViewBuilder
+    private var tabContent: some View {
+        switch selectedTab {
+        case .overview:
+            ScrollView {
+                metricsGrid
+                    .padding(20)
+            }
+        case .docker:
+            ScrollView {
+                DockerPanelView(docker: model.metrics.docker)
+                    .padding(20)
+            }
+        case .openclaw:
+            ScrollView {
+                OpenClawPanelView(openclaw: model.metrics.openclaw)
+                    .padding(20)
+            }
+        }
     }
 
     private var statusLine: String {
@@ -144,8 +193,6 @@ struct DashboardView: View {
             }
 
             ProcessTableView(items: m.top)
-            DockerPanelView(docker: m.docker)
-            OpenClawPanelView(openclaw: m.openclaw)
         }
     }
 
