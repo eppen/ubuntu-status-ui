@@ -179,21 +179,80 @@ struct DashboardView: View {
                         ("Swap", "\(Formatters.bytes(m.swapUsed)) (\(Formatters.percent(m.swapPercent)))")
                     ]
                 )
-                GaugeCard(
-                    title: "磁盘",
-                    percent: m.diskPercent,
-                    bigText: Formatters.percent(m.diskPercent),
-                    smallText: "剩余 \(Formatters.bytes(m.diskFree))",
-                    rows: [
-                        ("读", Formatters.rateBps(m.diskReadBps)),
-                        ("写", Formatters.rateBps(m.diskWriteBps))
-                    ]
-                )
                 NetworkCard(up: m.netOutBps, down: m.netInBps)
+                ForEach(diskCards(m)) { card in
+                    GaugeCard(
+                        title: card.title,
+                        percent: card.percent,
+                        bigText: Formatters.percent(card.percent),
+                        smallText: "剩余 \(Formatters.bytes(card.free))",
+                        rows: [
+                            ("已用", Formatters.bytes(card.used)),
+                            ("容量", Formatters.bytes(card.total))
+                        ]
+                    )
+                }
+            }
+
+            // IO rates for all disks combined (from /proc/diskstats)
+            if m.diskReadBps > 0 || m.diskWriteBps > 0 {
+                HStack(spacing: 16) {
+                    Text("磁盘 IO")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Text("读 \(Formatters.rateBps(m.diskReadBps))")
+                        .font(.subheadline.monospacedDigit())
+                    Text("写 \(Formatters.rateBps(m.diskWriteBps))")
+                        .font(.subheadline.monospacedDigit())
+                    Spacer()
+                }
             }
 
             ProcessTableView(items: m.top)
         }
+    }
+
+    private struct DiskCardModel: Identifiable {
+        var id: String { mount }
+        var mount: String
+        var title: String
+        var percent: Double
+        var free: UInt64
+        var used: UInt64
+        var total: UInt64
+    }
+
+    private func diskCards(_ m: MetricsSnapshot) -> [DiskCardModel] {
+        let list = m.disks.isEmpty
+            ? [RawMetricsPayload.DiskInfo(mount: m.diskMount, total: m.diskTotal, used: m.diskUsed, free: m.diskFree, percent: m.diskPercent)]
+            : m.disks
+        return list.map { d in
+            DiskCardModel(
+                mount: d.mount,
+                title: diskTitle(mount: d.mount, count: list.count),
+                percent: d.percent,
+                free: d.free,
+                used: d.used,
+                total: d.total
+            )
+        }
+    }
+
+    private func diskTitle(mount: String, count: Int) -> String {
+        if count <= 1 {
+            return "磁盘"
+        }
+        if mount == "/" || mount == "/System/Volumes/Data" {
+            return "系统磁盘"
+        }
+        if mount.hasPrefix("/Volumes/") {
+            return "磁盘 \((mount as NSString).lastPathComponent)"
+        }
+        if mount.hasPrefix("/mnt/") {
+            return "磁盘 \((mount as NSString).lastPathComponent)"
+        }
+        let short = (mount as NSString).lastPathComponent
+        return short.isEmpty ? "磁盘" : "磁盘 \(short)"
     }
 
     private var dockerChipText: String {

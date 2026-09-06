@@ -7,48 +7,48 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		C1EB50965606491EBDC6C89A /* MetricsSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB96D7D305144DB29BE5BC8E /* MetricsSnapshot.swift */; };
-		F66D7D3E3E704A2D9EDE1A6C /* ServerProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79E392071F66405EB3F6EC72 /* ServerProfile.swift */; };
-		D61D8E8430994260B7FB4AF2 /* ServerStatusApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78AF4DD9AA7749C39B8F855B /* ServerStatusApp.swift */; };
-		B7C1D36E363846CFB2B5B5D9 /* AppBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33548442404A4622AB6457BB /* AppBootstrap.swift */; };
-		219D0E89E62840049519E23D /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24657A64FEAF4B6793819F84 /* AppModel.swift */; };
-		7F978923C3204851BB4A6212 /* Formatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43CC7BEB6C104B4998684A6E /* Formatters.swift */; };
-		9A17040D11B543E59D95B381 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF02839A099F4D1EB2D70F1F /* KeychainStore.swift */; };
-		0F7118ACB48646AEAEB2C4D3 /* PlatformChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66D2D63AE58C47FD856F324E /* PlatformChrome.swift */; };
-		179CFAD837A04BB7B3970675 /* PrivateKeyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F279A8D4F82F4179A7E8B1B1 /* PrivateKeyStore.swift */; };
-		0E17AAA2B13D485589DAE5CC /* RemoteCollectorScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = C64F3B4AC0E34638830530F9 /* RemoteCollectorScript.swift */; };
-		B23B839795134918A45DD746 /* SSHSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 047A939FA7E14260B1EE1DB0 /* SSHSession.swift */; };
-		CDBEB273B3D14D66A897AB21 /* AddServerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD060AC215F740BD9B09EC6D /* AddServerView.swift */; };
-		69E706CA742E43A5ACBBA478 /* DockerPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDC09F8A34E84E5CA085D606 /* DockerPanelView.swift */; };
-		C626F613506D4B3CB0326719 /* GaugeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFB06F43C7964AF38D81A63E /* GaugeView.swift */; };
-		E37C9AAF7625447F88EEB70A /* OpenClawPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 839C797BD72B407E8E87747F /* OpenClawPanelView.swift */; };
-		A9772A242A6B4FB9A2CB48F5 /* ProcessTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06679FC572584ABF8911F3BA /* ProcessTableView.swift */; };
-		F35A929AFEFB4AA88195035C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F184875A29674D94A256ADC5 /* ContentView.swift */; };
-		FDA0521763A84F778138FFB0 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D11757F3A77341EF9F99DEDD /* DashboardView.swift */; };
-		5DAEE8F76866491FB9D52D98 /* ServerListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C1D897D769F4485A6B51B02 /* ServerListView.swift */; };
+		E83065541B8147428906CBF5 /* MetricsSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DE1D1EBD947420FB152FCE2 /* MetricsSnapshot.swift */; };
+		26CBBFF7986849849196AD63 /* ServerProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53AD17AF792C455C9EE004B7 /* ServerProfile.swift */; };
+		8E39D70C00484A60A0A82015 /* ServerStatusApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F933E5CF19248E8B3511435 /* ServerStatusApp.swift */; };
+		7B86CC2F02D84BF8ACE5254D /* AppBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44933BFB379A490AA64C6143 /* AppBootstrap.swift */; };
+		784320AC0788465C989E1CB1 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24679F3B7706475BA312DF4C /* AppModel.swift */; };
+		CE76675B30CB4A79B4C3C3EA /* Formatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 697BF290044F4E18BD234564 /* Formatters.swift */; };
+		00D13835D5AC417F9D1EC4FA /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 637590A697B64696BD09CFDF /* KeychainStore.swift */; };
+		EDFD535053F54CCA8028AA05 /* PlatformChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DF395C6D0914291ACB607E3 /* PlatformChrome.swift */; };
+		C3E8EE06753C47ED8F89AD40 /* PrivateKeyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97C15D8D190742908933C308 /* PrivateKeyStore.swift */; };
+		A3BF6A680713424989879C6A /* RemoteCollectorScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = 967190BDB3724DF58723603A /* RemoteCollectorScript.swift */; };
+		FC0D8DC2BDB44E81881A6302 /* SSHSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 928F7FBB5F6D48A4A403A50F /* SSHSession.swift */; };
+		FC6B98A4F7C64E90BD64B6C9 /* AddServerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA7E7021B5D14159B9E9E29C /* AddServerView.swift */; };
+		D9C3A7BF6512496986164F3F /* DockerPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C08D1F7AF0F34AAFA868688E /* DockerPanelView.swift */; };
+		D19EFA3F88EB45D490284A9F /* GaugeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F8DC2042E514D64B0948A81 /* GaugeView.swift */; };
+		4B176BCB56E44BF1B42C1B1C /* OpenClawPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8452F3585945469CA5A129C8 /* OpenClawPanelView.swift */; };
+		F5D53827CE104284A87C96EB /* ProcessTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFFD577F32644DA8A639358C /* ProcessTableView.swift */; };
+		A860D69A5B724A77A7BF1686 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F65509B60C1E4AAA83088211 /* ContentView.swift */; };
+		E9932B5AADDE4D57A086C325 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2CF2FAD5C64E109138CA7C /* DashboardView.swift */; };
+		E0221B7AB9774383B2238F9D /* ServerListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58754A8E62904D2EA047CCC9 /* ServerListView.swift */; };
 		A10000000000000000000020 /* Citadel in Frameworks */ = {isa = PBXBuildFile; productRef = A1000000000000000000000B /* Citadel */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		BB96D7D305144DB29BE5BC8E /* MetricsSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/MetricsSnapshot.swift"; sourceTree = "<group>"; };
-		79E392071F66405EB3F6EC72 /* ServerProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/ServerProfile.swift"; sourceTree = "<group>"; };
-		78AF4DD9AA7749C39B8F855B /* ServerStatusApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ServerStatusApp.swift"; sourceTree = "<group>"; };
-		33548442404A4622AB6457BB /* AppBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/AppBootstrap.swift"; sourceTree = "<group>"; };
-		24657A64FEAF4B6793819F84 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/AppModel.swift"; sourceTree = "<group>"; };
-		43CC7BEB6C104B4998684A6E /* Formatters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/Formatters.swift"; sourceTree = "<group>"; };
-		FF02839A099F4D1EB2D70F1F /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/KeychainStore.swift"; sourceTree = "<group>"; };
-		66D2D63AE58C47FD856F324E /* PlatformChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/PlatformChrome.swift"; sourceTree = "<group>"; };
-		F279A8D4F82F4179A7E8B1B1 /* PrivateKeyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/PrivateKeyStore.swift"; sourceTree = "<group>"; };
-		C64F3B4AC0E34638830530F9 /* RemoteCollectorScript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/RemoteCollectorScript.swift"; sourceTree = "<group>"; };
-		047A939FA7E14260B1EE1DB0 /* SSHSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/SSHSession.swift"; sourceTree = "<group>"; };
-		FD060AC215F740BD9B09EC6D /* AddServerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/AddServerView.swift"; sourceTree = "<group>"; };
-		EDC09F8A34E84E5CA085D606 /* DockerPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Components/DockerPanelView.swift"; sourceTree = "<group>"; };
-		EFB06F43C7964AF38D81A63E /* GaugeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Components/GaugeView.swift"; sourceTree = "<group>"; };
-		839C797BD72B407E8E87747F /* OpenClawPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Components/OpenClawPanelView.swift"; sourceTree = "<group>"; };
-		06679FC572584ABF8911F3BA /* ProcessTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Components/ProcessTableView.swift"; sourceTree = "<group>"; };
-		F184875A29674D94A256ADC5 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/ContentView.swift"; sourceTree = "<group>"; };
-		D11757F3A77341EF9F99DEDD /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/DashboardView.swift"; sourceTree = "<group>"; };
-		0C1D897D769F4485A6B51B02 /* ServerListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/ServerListView.swift"; sourceTree = "<group>"; };
+		9DE1D1EBD947420FB152FCE2 /* MetricsSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/MetricsSnapshot.swift"; sourceTree = "<group>"; };
+		53AD17AF792C455C9EE004B7 /* ServerProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/ServerProfile.swift"; sourceTree = "<group>"; };
+		0F933E5CF19248E8B3511435 /* ServerStatusApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ServerStatusApp.swift"; sourceTree = "<group>"; };
+		44933BFB379A490AA64C6143 /* AppBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/AppBootstrap.swift"; sourceTree = "<group>"; };
+		24679F3B7706475BA312DF4C /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/AppModel.swift"; sourceTree = "<group>"; };
+		697BF290044F4E18BD234564 /* Formatters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/Formatters.swift"; sourceTree = "<group>"; };
+		637590A697B64696BD09CFDF /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/KeychainStore.swift"; sourceTree = "<group>"; };
+		6DF395C6D0914291ACB607E3 /* PlatformChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/PlatformChrome.swift"; sourceTree = "<group>"; };
+		97C15D8D190742908933C308 /* PrivateKeyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/PrivateKeyStore.swift"; sourceTree = "<group>"; };
+		967190BDB3724DF58723603A /* RemoteCollectorScript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/RemoteCollectorScript.swift"; sourceTree = "<group>"; };
+		928F7FBB5F6D48A4A403A50F /* SSHSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/SSHSession.swift"; sourceTree = "<group>"; };
+		EA7E7021B5D14159B9E9E29C /* AddServerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/AddServerView.swift"; sourceTree = "<group>"; };
+		C08D1F7AF0F34AAFA868688E /* DockerPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Components/DockerPanelView.swift"; sourceTree = "<group>"; };
+		8F8DC2042E514D64B0948A81 /* GaugeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Components/GaugeView.swift"; sourceTree = "<group>"; };
+		8452F3585945469CA5A129C8 /* OpenClawPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Components/OpenClawPanelView.swift"; sourceTree = "<group>"; };
+		DFFD577F32644DA8A639358C /* ProcessTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Components/ProcessTableView.swift"; sourceTree = "<group>"; };
+		F65509B60C1E4AAA83088211 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/ContentView.swift"; sourceTree = "<group>"; };
+		1A2CF2FAD5C64E109138CA7C /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/DashboardView.swift"; sourceTree = "<group>"; };
+		58754A8E62904D2EA047CCC9 /* ServerListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/ServerListView.swift"; sourceTree = "<group>"; };
 		A10000000000000000000006 /* ServerStatus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ServerStatus.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -75,25 +75,25 @@
 		A10000000000000000000009 /* ServerStatus */ = {
 			isa = PBXGroup;
 			children = (
-				BB96D7D305144DB29BE5BC8E /* MetricsSnapshot.swift */,
-				79E392071F66405EB3F6EC72 /* ServerProfile.swift */,
-				78AF4DD9AA7749C39B8F855B /* ServerStatusApp.swift */,
-				33548442404A4622AB6457BB /* AppBootstrap.swift */,
-				24657A64FEAF4B6793819F84 /* AppModel.swift */,
-				43CC7BEB6C104B4998684A6E /* Formatters.swift */,
-				FF02839A099F4D1EB2D70F1F /* KeychainStore.swift */,
-				66D2D63AE58C47FD856F324E /* PlatformChrome.swift */,
-				F279A8D4F82F4179A7E8B1B1 /* PrivateKeyStore.swift */,
-				C64F3B4AC0E34638830530F9 /* RemoteCollectorScript.swift */,
-				047A939FA7E14260B1EE1DB0 /* SSHSession.swift */,
-				FD060AC215F740BD9B09EC6D /* AddServerView.swift */,
-				EDC09F8A34E84E5CA085D606 /* DockerPanelView.swift */,
-				EFB06F43C7964AF38D81A63E /* GaugeView.swift */,
-				839C797BD72B407E8E87747F /* OpenClawPanelView.swift */,
-				06679FC572584ABF8911F3BA /* ProcessTableView.swift */,
-				F184875A29674D94A256ADC5 /* ContentView.swift */,
-				D11757F3A77341EF9F99DEDD /* DashboardView.swift */,
-				0C1D897D769F4485A6B51B02 /* ServerListView.swift */,
+				9DE1D1EBD947420FB152FCE2 /* MetricsSnapshot.swift */,
+				53AD17AF792C455C9EE004B7 /* ServerProfile.swift */,
+				0F933E5CF19248E8B3511435 /* ServerStatusApp.swift */,
+				44933BFB379A490AA64C6143 /* AppBootstrap.swift */,
+				24679F3B7706475BA312DF4C /* AppModel.swift */,
+				697BF290044F4E18BD234564 /* Formatters.swift */,
+				637590A697B64696BD09CFDF /* KeychainStore.swift */,
+				6DF395C6D0914291ACB607E3 /* PlatformChrome.swift */,
+				97C15D8D190742908933C308 /* PrivateKeyStore.swift */,
+				967190BDB3724DF58723603A /* RemoteCollectorScript.swift */,
+				928F7FBB5F6D48A4A403A50F /* SSHSession.swift */,
+				EA7E7021B5D14159B9E9E29C /* AddServerView.swift */,
+				C08D1F7AF0F34AAFA868688E /* DockerPanelView.swift */,
+				8F8DC2042E514D64B0948A81 /* GaugeView.swift */,
+				8452F3585945469CA5A129C8 /* OpenClawPanelView.swift */,
+				DFFD577F32644DA8A639358C /* ProcessTableView.swift */,
+				F65509B60C1E4AAA83088211 /* ContentView.swift */,
+				1A2CF2FAD5C64E109138CA7C /* DashboardView.swift */,
+				58754A8E62904D2EA047CCC9 /* ServerListView.swift */,
 			);
 			name = ServerStatus;
 			path = Sources/ServerStatus;
@@ -181,25 +181,25 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C1EB50965606491EBDC6C89A /* MetricsSnapshot.swift in Sources */,
-				F66D7D3E3E704A2D9EDE1A6C /* ServerProfile.swift in Sources */,
-				D61D8E8430994260B7FB4AF2 /* ServerStatusApp.swift in Sources */,
-				B7C1D36E363846CFB2B5B5D9 /* AppBootstrap.swift in Sources */,
-				219D0E89E62840049519E23D /* AppModel.swift in Sources */,
-				7F978923C3204851BB4A6212 /* Formatters.swift in Sources */,
-				9A17040D11B543E59D95B381 /* KeychainStore.swift in Sources */,
-				0F7118ACB48646AEAEB2C4D3 /* PlatformChrome.swift in Sources */,
-				179CFAD837A04BB7B3970675 /* PrivateKeyStore.swift in Sources */,
-				0E17AAA2B13D485589DAE5CC /* RemoteCollectorScript.swift in Sources */,
-				B23B839795134918A45DD746 /* SSHSession.swift in Sources */,
-				CDBEB273B3D14D66A897AB21 /* AddServerView.swift in Sources */,
-				69E706CA742E43A5ACBBA478 /* DockerPanelView.swift in Sources */,
-				C626F613506D4B3CB0326719 /* GaugeView.swift in Sources */,
-				E37C9AAF7625447F88EEB70A /* OpenClawPanelView.swift in Sources */,
-				A9772A242A6B4FB9A2CB48F5 /* ProcessTableView.swift in Sources */,
-				F35A929AFEFB4AA88195035C /* ContentView.swift in Sources */,
-				FDA0521763A84F778138FFB0 /* DashboardView.swift in Sources */,
-				5DAEE8F76866491FB9D52D98 /* ServerListView.swift in Sources */,
+				E83065541B8147428906CBF5 /* MetricsSnapshot.swift in Sources */,
+				26CBBFF7986849849196AD63 /* ServerProfile.swift in Sources */,
+				8E39D70C00484A60A0A82015 /* ServerStatusApp.swift in Sources */,
+				7B86CC2F02D84BF8ACE5254D /* AppBootstrap.swift in Sources */,
+				784320AC0788465C989E1CB1 /* AppModel.swift in Sources */,
+				CE76675B30CB4A79B4C3C3EA /* Formatters.swift in Sources */,
+				00D13835D5AC417F9D1EC4FA /* KeychainStore.swift in Sources */,
+				EDFD535053F54CCA8028AA05 /* PlatformChrome.swift in Sources */,
+				C3E8EE06753C47ED8F89AD40 /* PrivateKeyStore.swift in Sources */,
+				A3BF6A680713424989879C6A /* RemoteCollectorScript.swift in Sources */,
+				FC0D8DC2BDB44E81881A6302 /* SSHSession.swift in Sources */,
+				FC6B98A4F7C64E90BD64B6C9 /* AddServerView.swift in Sources */,
+				D9C3A7BF6512496986164F3F /* DockerPanelView.swift in Sources */,
+				D19EFA3F88EB45D490284A9F /* GaugeView.swift in Sources */,
+				4B176BCB56E44BF1B42C1B1C /* OpenClawPanelView.swift in Sources */,
+				F5D53827CE104284A87C96EB /* ProcessTableView.swift in Sources */,
+				A860D69A5B724A77A7BF1686 /* ContentView.swift in Sources */,
+				E9932B5AADDE4D57A086C325 /* DashboardView.swift in Sources */,
+				E0221B7AB9774383B2238F9D /* ServerListView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -326,8 +326,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/eppen/Citadel.git";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.11.0;
+				kind = revision;
+				revision = 5d0ad3a57696d091670aae65b64bcdea45206a65;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

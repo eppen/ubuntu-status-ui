@@ -356,8 +356,8 @@ def generate() -> None:
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/eppen/Citadel.git";
 			requirement = {{
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.11.0;
+				kind = revision;
+				revision = 5d0ad3a57696d091670aae65b64bcdea45206a65;
 			}};
 		}};
 /* End XCRemoteSwiftPackageReference section */

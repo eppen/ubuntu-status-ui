@@ -8,6 +8,8 @@ struct RawMetricsPayload: Codable {
     var mem: MemInfo
     var swap: SwapInfo
     var disk: DiskInfo
+    /// All significant mounts (optional for older collectors).
+    var disks: [DiskInfo]?
     var net_bytes: [String: NetBytes]
     var disk_bytes: DiskBytes
     var temp_c: Double?
@@ -40,12 +42,14 @@ struct RawMetricsPayload: Codable {
         var percent: Double
     }
 
-    struct DiskInfo: Codable {
+    struct DiskInfo: Codable, Identifiable, Equatable {
         var mount: String
         var total: UInt64
         var used: UInt64
         var free: UInt64
         var percent: Double
+
+        var id: String { mount }
     }
 
     struct NetBytes: Codable {
@@ -186,6 +190,8 @@ struct MetricsSnapshot: Equatable {
     var diskUsed: UInt64
     var diskFree: UInt64
     var diskPercent: Double
+    /// Significant filesystems to show (disk1/disk2/…); falls back to single disk fields.
+    var disks: [RawMetricsPayload.DiskInfo]
     var netInBps: Double
     var netOutBps: Double
     var diskReadBps: Double
@@ -203,6 +209,7 @@ struct MetricsSnapshot: Equatable {
         memTotal: 0, memUsed: 0, memAvailable: 0, memPercent: 0,
         swapTotal: 0, swapUsed: 0, swapPercent: 0,
         diskMount: "/", diskTotal: 0, diskUsed: 0, diskFree: 0, diskPercent: 0,
+        disks: [],
         netInBps: 0, netOutBps: 0,
         diskReadBps: 0, diskWriteBps: 0,
         tempC: nil,
@@ -272,6 +279,12 @@ enum MetricsMath {
             diskWrite = max(0, Double(current.diskWrite &- prev.diskWrite) / dt)
         }
 
+        let diskList: [RawMetricsPayload.DiskInfo] = {
+            if let disks = raw.disks, !disks.isEmpty { return disks }
+            return [raw.disk]
+        }()
+        let primary = diskList.max(by: { $0.percent < $1.percent }) ?? raw.disk
+
         let snapshot = MetricsSnapshot(
             ts: now,
             uptimeSeconds: raw.uptime_s,
@@ -287,11 +300,12 @@ enum MetricsMath {
             swapTotal: raw.swap.total,
             swapUsed: raw.swap.used,
             swapPercent: raw.swap.percent,
-            diskMount: raw.disk.mount,
-            diskTotal: raw.disk.total,
-            diskUsed: raw.disk.used,
-            diskFree: raw.disk.free,
-            diskPercent: raw.disk.percent,
+            diskMount: primary.mount,
+            diskTotal: primary.total,
+            diskUsed: primary.used,
+            diskFree: primary.free,
+            diskPercent: primary.percent,
+            disks: diskList,
             netInBps: netIn,
             netOutBps: netOut,
             diskReadBps: diskRead,

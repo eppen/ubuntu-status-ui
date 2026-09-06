@@ -174,23 +174,182 @@ def meminfo():
     }
 
 def disk_root():
-    # Prefer data volume on modern macOS if present
-    mounts = ["/"]
+    disks = disks_all()
+    if not disks:
+        return {"mount": "/", "total": 0, "used": 0, "free": 0, "percent": 0.0}
+    # Primary = fullest
+    return max(disks, key=lambda d: (d["percent"], d["total"]))
+
+def disks_all():
+    """List significant mounts (skip tiny/virtual)."""
+    items = []
+    seen = set()
     if IS_DARWIN:
-        mounts = ["/System/Volumes/Data", "/"]
-    for mount in mounts:
-        try:
-            st = os.statvfs(mount)
-            if st.f_blocks <= 0:
+        # APFS: "/" and "/System/Volumes/Data" share the same capacity — show only one.
+        primary = None
+        for mount in ("/System/Volumes/Data", "/"):
+            try:
+                st = os.statvfs(mount)
+                if st.f_blocks <= 0:
+                    continue
+                total = int(st.f_frsize * st.f_blocks)
+                free = int(st.f_frsize * st.f_bavail)
+                used = max(0, total - int(st.f_frsize * st.f_bfree))
+                if total < 100 * 1024 * 1024:
+                    continue
+                pct = round((used * 100.0 / total), 1) if total else 0.0
+                primary = {"mount": mount, "total": total, "used": used, "free": free, "percent": pct}
+                break
+            except OSError:
                 continue
+        if primary:
+            items.append(primary)
+            seen.add(primary["mount"])
+            seen.add("/")
+            seen.add("/System/Volumes/Data")
+        # External / removable volumes only
+        try:
+            for name in sorted(os.listdir("/Volumes")):
+                mount = os.path.join("/Volumes", name)
+                if not os.path.isdir(mount) or mount in seen:
+                    continue
+                # Skip firmlink / system synthetic volumes
+                if name.startswith("com.apple.") or name in ("Macintosh HD",):
+                    # "Macintosh HD" often firmlinks to system; skip if same size as primary
+                    pass
+                try:
+                    st = os.statvfs(mount)
+                    if st.f_blocks <= 0:
+                        continue
+                    total = int(st.f_frsize * st.f_blocks)
+                    free = int(st.f_frsize * st.f_bavail)
+                    used = max(0, total - int(st.f_frsize * st.f_bfree))
+                    if total < 100 * 1024 * 1024:
+                        continue
+                    if primary and abs(total - primary["total"]) < 1024 * 1024 and abs(used - primary["used"]) < 1024 * 1024:
+                        continue  # same APFS container / firmlink
+                    pct = round((used * 100.0 / total), 1) if total else 0.0
+                    items.append({"mount": mount, "total": total, "used": used, "free": free, "percent": pct})
+                    seen.add(mount)
+                except OSError:
+                    continue
+        except OSError:
+            pass
+        return items
+    # Linux: /proc/mounts + statvfs is locale-proof; df is fallback only.
+    skip_fs = {
+        "tmpfs", "devtmpfs", "squashfs", "overlay", "overlay2", "aufs",
+        "devpts", "cgroup", "cgroup2", "proc", "sysfs", "efivarfs", "autofs",
+        "rpc_pipefs", "binfmt_misc", "tracefs", "debugfs", "securityfs",
+        "pstore", "bpf", "hugetlbfs", "mqueue", "fuse", "fusectl",
+        "fuse.portal", "fuse.gvfsd-fuse", "nsfs", "ramfs", "iso9660", "udf",
+    }
+    skip_prefix = (
+        "/snap/", "/run/", "/sys/", "/proc/", "/dev/",
+        "/var/lib/docker", "/var/lib/containers", "/var/lib/kubelet",
+        "/var/lib/lxc", "/var/lib/lxd", "/boot/efi",
+    )
+    seen_dev = set()
+
+    def consider(mount, fstype=""):
+        fstype = (fstype or "").lower()
+        if fstype and (fstype in skip_fs or fstype.startswith("fuse.")):
+            return
+        if not mount.startswith("/"):
+            return
+        if mount.startswith("/dev") or mount in ("/udev",):
+            return
+        if any(mount == p.rstrip("/") or mount.startswith(p) for p in skip_prefix):
+            return
+        if "/ram" in mount:
+            return
+        if mount in seen:
+            return
+        try:
+            # Unescape /proc/mounts octal (e.g. \040)
+            path = mount.encode("utf-8").decode("unicode_escape") if "\\" in mount else mount
+            st = os.statvfs(path)
+            if st.f_blocks <= 0:
+                return
             total = int(st.f_frsize * st.f_blocks)
             free = int(st.f_frsize * st.f_bavail)
             used = max(0, total - int(st.f_frsize * st.f_bfree))
-            pct = round((used * 100.0 / total), 1) if total else 0.0
-            return {"mount": mount, "total": total, "used": used, "free": free, "percent": pct}
         except OSError:
+            return
+        if total < 100 * 1024 * 1024:
+            return
+        if path == "/boot" and total < 2 * 1024 * 1024 * 1024:
+            return
+        try:
+            dev = os.stat(path).st_dev
+            if dev in seen_dev:
+                return
+            seen_dev.add(dev)
+        except OSError:
+            pass
+        seen.add(path)
+        pct = round((used * 100.0 / total), 1) if total else 0.0
+        items.append({"mount": path, "total": total, "used": used, "free": free, "percent": pct})
+
+    for line in read_text("/proc/mounts").splitlines():
+        parts = line.split()
+        if len(parts) < 3:
             continue
-    return {"mount": "/", "total": 0, "used": 0, "free": 0, "percent": 0.0}
+        consider(parts[1], parts[2])
+
+    if not items:
+        # Fallback: LC_ALL=C df (avoid localized headers breaking column detect)
+        text = (
+            sh_ok(["env", "LC_ALL=C", "df", "-kP", "-T"])
+            or sh_ok(["env", "LC_ALL=C", "df", "-kT"])
+            or sh_ok(["env", "LC_ALL=C", "df", "-kP"])
+            or sh_ok(["env", "LC_ALL=C", "df", "-k"])
+            or sh_ok(["df", "-k"])
+        )
+        lines = [ln for ln in text.splitlines() if ln.strip()]
+        prev = ""
+        for line in lines[1:] if lines else []:
+            parts = line.split()
+            if len(parts) < 5:
+                prev = (prev + " " + line).strip()
+                continue
+            if prev:
+                parts = (prev + " " + line).split()
+                prev = ""
+            # Detect optional Type column: 2nd field non-numeric => fstype
+            fstype = ""
+            idx = 1
+            if len(parts) >= 7:
+                try:
+                    int(parts[1])
+                except ValueError:
+                    fstype = parts[1]
+                    idx = 2
+            try:
+                blocks, used_k, avail_k, usep = parts[idx], parts[idx + 1], parts[idx + 2], parts[idx + 3]
+                mount = parts[-1]
+                total = int(blocks) * 1024
+                used = int(used_k) * 1024
+                free = int(avail_k) * 1024
+                pct = float(usep.replace("%", "") or 0)
+            except (ValueError, IndexError):
+                continue
+            if fstype and (fstype.lower() in skip_fs or fstype.lower().startswith("fuse.")):
+                continue
+            if total < 100 * 1024 * 1024:
+                continue
+            if mount.startswith("/dev") or any(mount.startswith(p) for p in skip_prefix):
+                continue
+            if mount in seen:
+                continue
+            seen.add(mount)
+            items.append({"mount": mount, "total": total, "used": used, "free": free, "percent": round(pct, 1)})
+
+    data_disks = [d for d in items if d["mount"].startswith("/mnt/disk")]
+    if data_disks:
+        return data_disks
+    items.sort(key=lambda d: (0 if d["mount"] == "/" else 1, d["mount"]))
+    return items
 
 def net_bytes():
     out = {}
@@ -717,6 +876,7 @@ payload = {
     "mem": mem["mem"],
     "swap": mem["swap"],
     "disk": disk_root(),
+    "disks": disks_all(),
     "net_bytes": net_bytes(),
     "disk_bytes": disk_bytes(),
     "temp_c": temp_c(),
@@ -730,7 +890,274 @@ print(json.dumps(payload, separators=(",", ":")), flush=True)
     static func remoteCommand() -> String {
         let b64 = Data(source.utf8).base64EncodedString()
         // Expand PATH for Docker Desktop / Homebrew / OpenClaw; macOS base64 uses -D/--decode
-        return #"bash --noprofile --norc -c "export PATH=\"$HOME/.local/node/bin:$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/Applications/Docker.app/Contents/Resources/bin:/usr/bin:/bin:$PATH\"; echo \#(b64) | (base64 --decode 2>/dev/null || base64 -D 2>/dev/null || base64 -d) | /usr/bin/env python3 -u""#
+        return #"bash --noprofile --norc -c "export PATH=\"$HOME/.local/node/bin:$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/Applications/Docker.app/Contents/Resources/bin:/usr/bin:/bin:$PATH\"; PY=\$(command -v python3 || command -v python || true); if [ -z \"\$PY\" ]; then echo '{\"error\":\"未找到 python3/python\"}'; exit 1; fi; echo \#(b64) | (base64 --decode 2>/dev/null || base64 -D 2>/dev/null || base64 -d) | \"\$PY\" -u""#
+    }
+
+    /// Short remote wrapper: run Python with script on stdin (avoids huge argv on old SSHD).
+    static var pythonStdinRemoteCommand: String {
+        #"export PATH="$HOME/.local/node/bin:$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/Applications/Docker.app/Contents/Resources/bin:/usr/bin:/bin:$PATH"; PY=$(command -v python3 2>/dev/null || command -v python 2>/dev/null || true); if [ -z "$PY" ]; then echo '{"error":"no python"}'; exit 42; fi; exec "$PY" -u -"#
+    }
+
+    /// POSIX sh collector for ancient Linux (no python3 / tiny ARG_MAX). Emits the same JSON shape.
+    static let legacyShellSource: String = #"""
+set +e
+export PATH="/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin:$PATH"
+DF_BIN=$(command -v df 2>/dev/null || ls /bin/df /usr/bin/df 2>/dev/null | head -1)
+PS_BIN=$(command -v ps 2>/dev/null || ls /bin/ps /usr/bin/ps 2>/dev/null | head -1)
+AWK_BIN=$(command -v awk 2>/dev/null || ls /bin/awk /usr/bin/awk /usr/bin/gawk 2>/dev/null | head -1)
+SED_BIN=$(command -v sed 2>/dev/null || ls /bin/sed /usr/bin/sed 2>/dev/null | head -1)
+HEAD_BIN=$(command -v head 2>/dev/null || ls /bin/head /usr/bin/head 2>/dev/null | head -1)
+TR_BIN=$(command -v tr 2>/dev/null || ls /bin/tr /usr/bin/tr 2>/dev/null | head -1)
+[ -n "$HEAD_BIN" ] || HEAD_BIN=head
+[ -n "$SED_BIN" ] || SED_BIN=sed
+[ -n "$TR_BIN" ] || TR_BIN=tr
+
+UP=0
+if [ -r /proc/uptime ]; then
+  read UP _ignore < /proc/uptime
+  UP=${UP%%.*}
+fi
+L1=0; L5=0; L15=0
+read L1 L5 L15 ignore < /proc/loadavg 2>/dev/null || true
+CPU_LINE=$(grep '^cpu ' /proc/stat 2>/dev/null | $HEAD_BIN -1)
+CPU_TOTAL=0; CPU_IDLE=0; CORES=1
+if [ -n "$CPU_LINE" ]; then
+  set -- $CPU_LINE
+  shift
+  CPU_IDLE=$4
+  CPU_TOTAL=0
+  for v in "$@"; do CPU_TOTAL=$((CPU_TOTAL + v)); done
+fi
+CORES=$(grep -c '^processor' /proc/cpuinfo 2>/dev/null || echo 1)
+[ "$CORES" -gt 0 ] 2>/dev/null || CORES=1
+MEM_TOTAL=0; MEM_AVAIL=0; MEM_FREE=0; BUFF=0; CACHE=0; SWAP_T=0; SWAP_F=0
+while read key val rest; do
+  case "$key" in
+    MemTotal:) MEM_TOTAL=$val ;;
+    MemAvailable:) MEM_AVAIL=$val ;;
+    MemFree:) MEM_FREE=$val ;;
+    Buffers:) BUFF=$val ;;
+    Cached:) CACHE=$val ;;
+    SwapTotal:) SWAP_T=$val ;;
+    SwapFree:) SWAP_F=$val ;;
+  esac
+done < /proc/meminfo 2>/dev/null
+MEM_TOTAL_KB=$MEM_TOTAL; MEM_AVAIL_KB=$MEM_AVAIL; MEM_FREE_KB=$MEM_FREE
+BUFF_KB=$BUFF; CACHE_KB=$CACHE; SWAP_T_KB=$SWAP_T; SWAP_F_KB=$SWAP_F
+# BusyBox ash is 32-bit: never multiply large KB in $(( )); use awk.
+kb2b() {
+  if [ -n "$AWK_BIN" ]; then
+    $AWK_BIN -v k="${1:-0}" 'BEGIN{printf "%.0f", (k+0)*1024}'
+  else
+    echo $((${1:-0} * 1024))
+  fi
+}
+MEM_TOTAL=$(kb2b "$MEM_TOTAL_KB")
+MEM_AVAIL=$(kb2b "$MEM_AVAIL_KB")
+MEM_FREE=$(kb2b "$MEM_FREE_KB")
+BUFF=$(kb2b "$BUFF_KB")
+CACHE=$(kb2b "$CACHE_KB")
+SWAP_T=$(kb2b "$SWAP_T_KB")
+SWAP_F=$(kb2b "$SWAP_F_KB")
+if [ "${MEM_AVAIL_KB:-0}" -eq 0 ] 2>/dev/null; then
+  MEM_AVAIL_KB=$((MEM_FREE_KB + BUFF_KB + CACHE_KB))
+  MEM_AVAIL=$(kb2b "$MEM_AVAIL_KB")
+fi
+MEM_USED_KB=$((MEM_TOTAL_KB - MEM_AVAIL_KB))
+[ "$MEM_USED_KB" -lt 0 ] 2>/dev/null && MEM_USED_KB=0
+MEM_USED=$(kb2b "$MEM_USED_KB")
+MEM_PCT=0
+SWAP_U_KB=$((SWAP_T_KB - SWAP_F_KB))
+[ "$SWAP_U_KB" -lt 0 ] 2>/dev/null && SWAP_U_KB=0
+SWAP_U=$(kb2b "$SWAP_U_KB")
+SWAP_PCT=0
+if [ -n "$AWK_BIN" ]; then
+  [ "$MEM_TOTAL_KB" -gt 0 ] 2>/dev/null && MEM_PCT=$($AWK_BIN -v u="$MEM_USED_KB" -v t="$MEM_TOTAL_KB" 'BEGIN{printf "%.1f", (u*100)/t}')
+  [ "$SWAP_T_KB" -gt 0 ] 2>/dev/null && SWAP_PCT=$($AWK_BIN -v u="$SWAP_U_KB" -v t="$SWAP_T_KB" 'BEGIN{printf "%.1f", (u*100)/t}')
+fi
+
+# --- disks: all significant mounts (BusyBox df -k); also set primary disk ---
+DISK_T=0; DISK_U=0; DISK_A=0; DISK_P=0; DISK_M="/"
+DISKS_JSON=""
+if [ -n "$DF_BIN" ] && [ -n "$AWK_BIN" ]; then
+  EVAL=$($DF_BIN -k 2>/dev/null | $AWK_BIN '
+    function to_b(k) { return sprintf("%.0f", (k+0)*1024) }
+    NR==1 { next }
+    {
+      if (NF < 5) { prev=$0; next }
+      if (prev != "") { $0 = prev " " $0; prev="" }
+      mount=$NF
+      pct=$(NF-1); sub(/%/, "", pct)
+      avail=$(NF-2); used=$(NF-3); total=$(NF-4)
+      if (total+0 < 100*1024) next
+      if (mount ~ /^\/dev/ || mount == "/udev") next
+      if (mount ~ /ram/ || mount == "/dev") next
+      if (mount == "/boot" && total+0 < 2*1024*1024) next
+      tb=to_b(total); ub=to_b(used); ab=to_b(avail)
+      n++
+      mounts[n]=mount; pcts[n]=pct; tots[n]=tb; useds[n]=ub; avails[n]=ab
+      if (mount ~ /^\/mnt\/disk/) data++
+      if (pct+0 > bestpct+0 || (pct+0==bestpct+0 && total+0 > besttot+0)) {
+        bestpct=pct+0; besttot=total+0; bi=n
+      }
+    }
+    END {
+      if (n < 1) exit
+      # If NAS-style /mnt/disk* exists, only emit those
+      use_data = (data > 0)
+      first=1
+      printf "["
+      besti=0; bestp=-1
+      for (i=1; i<=n; i++) {
+        if (use_data && mounts[i] !~ /^\/mnt\/disk/) continue
+        if (pcts[i]+0 > bestp) { bestp=pcts[i]+0; besti=i }
+        if (!first) printf ","
+        first=0
+        printf "{\"mount\":\"%s\",\"total\":%s,\"used\":%s,\"free\":%s,\"percent\":%s}", mounts[i], tots[i], useds[i], avails[i], pcts[i]
+      }
+      printf "]\n"
+      if (besti == 0) besti = bi
+      printf "PRIMARY %s %s %s %s %s\n", pcts[besti], tots[besti], useds[besti], avails[besti], mounts[besti]
+    }
+  ')
+  # Lines: [json...] then PRIMARY ...
+  DISKS_JSON=$(echo "$EVAL" | $SED_BIN -n '1p')
+  PRIMARY=$(echo "$EVAL" | $SED_BIN -n '2p')
+  if [ -n "$PRIMARY" ]; then
+    set -- $PRIMARY
+    shift
+    DISK_P=$1; DISK_T=$2; DISK_U=$3; DISK_A=$4; shift 4; DISK_M=$*
+  fi
+fi
+if [ -z "$DISKS_JSON" ] || [ "$DISKS_JSON" = "[]" ]; then
+  if [ -n "$DF_BIN" ]; then
+    DFONE=$($DF_BIN -k / 2>/dev/null | $SED_BIN '1d' | $TR_BIN '\n' ' ' | $TR_BIN -s ' ')
+    set -- $DFONE
+    while [ $# -ge 5 ]; do
+      case "$1" in *[!0-9]*) shift ;; *) break ;; esac
+    done
+    if [ $# -ge 5 ]; then
+      DISK_T=$(kb2b "$1"); DISK_U=$(kb2b "$2"); DISK_A=$(kb2b "$3")
+      DISK_P=$(echo "$4" | $TR_BIN -d '%'); shift 4; DISK_M=$1
+    fi
+  fi
+  DISKS_JSON="[{\"mount\":\"$DISK_M\",\"total\":$DISK_T,\"used\":$DISK_U,\"free\":$DISK_A,\"percent\":$DISK_P}]"
+fi
+[ -z "$DISK_P" ] && DISK_P=0
+case "$DISK_P" in *[!0-9.]*|"") DISK_P=0 ;; esac
+[ -z "$DISK_M" ] && DISK_M="/"
+
+DISK_READ=0; DISK_WRITE=0
+if [ -r /proc/diskstats ] && [ -n "$AWK_BIN" ]; then
+  DW=$($AWK_BIN '
+    {
+      name=$3
+      if (name ~ /^(loop|ram|dm-|sr)/) next
+      if (name ~ /^sd[a-z]$/ || name ~ /^hd[a-z]$/ || name ~ /^vd[a-z]$/ || name ~ /^md[0-9]+$/) {
+        r+=$6; w+=$10
+      }
+    }
+    END { printf "%.0f %.0f", r*512, w*512 }
+  ' /proc/diskstats 2>/dev/null)
+  set -- $DW
+  DISK_READ=${1:-0}
+  DISK_WRITE=${2:-0}
+fi
+
+# --- top: BusyBox 1.7 ps only supports `ps` / `ps w` (no aux / -eo) ---
+TOP_JSON=""
+if [ -n "$PS_BIN" ]; then
+  # BusyBox: PID USER VSZ STAT COMMAND  (or PID Uid VmSize Stat Command)
+  PS_RAW=$($PS_BIN w 2>/dev/null)
+  [ -z "$PS_RAW" ] && PS_RAW=$($PS_BIN 2>/dev/null)
+  if [ -n "$PS_RAW" ] && [ -n "$AWK_BIN" ]; then
+    PS_OUT=$(echo "$PS_RAW" | $AWK_BIN '
+      NR==1 && ($1 ~ /PID/ || $1 == "PID") { next }
+      {
+        pid=$1+0; if (pid<=0) next
+        user=$2
+        vsz=$3+0
+        # STAT may be $4; command from $5 or $4 if numeric-less
+        cmd=$5; start=5
+        if ($4 ~ /^[0-9]+$/) { vsz=$4+0; cmd=$5; start=5 }
+        for (i=start+1; i<=NF; i++) cmd=cmd " " $i
+        if (cmd=="") cmd=$4
+        n=split(cmd, a, "/"); name=a[n]
+        if (name=="") name="?"
+        gsub(/["\\]/, "", name); gsub(/["\\]/, "", user)
+        # Sort key: VSZ desc (no CPU on BusyBox ps)
+        printf "%010d %s %s %s %s\n", vsz, pid, user, vsz, name
+      }
+    ' | sort -nr 2>/dev/null | $HEAD_BIN -12)
+  elif [ -n "$PS_RAW" ]; then
+    PS_OUT=$(echo "$PS_RAW" | $SED_BIN '1d' | $HEAD_BIN -12 | while read pid user vsz stat cmd rest; do
+      echo "0 $pid $user $vsz $cmd"
+    done)
+  fi
+  if [ -n "$PS_OUT" ]; then
+    while IFS= read -r pline; do
+      [ -z "$pline" ] && continue
+      set -- $pline
+      # formats: "vszkey pid user vsz name..." or "cpu pid user rss name..."
+      case "$1" in
+        *[!0-9]*) continue ;;
+      esac
+      # If 5+ fields from busybox sorted line: skip sort key
+      if [ $# -ge 5 ]; then
+        # detect 010-padded sort key (10 digits)
+        case "$1" in
+          [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9])
+            shift
+            ;;
+        esac
+      fi
+      cpu=0; pid=$1; user=$2; rss=$3; shift 3
+      name=$*
+      case "$pid" in *[!0-9]*|"") continue ;; esac
+      case "$rss" in *[!0-9]*|"") rss=0 ;; esac
+      rss_b=$(kb2b "$rss")
+      [ -n "$TOP_JSON" ] && TOP_JSON="$TOP_JSON,"
+      TOP_JSON="$TOP_JSON{\"pid\":$pid,\"name\":\"$name\",\"user\":\"$user\",\"cpu\":$cpu,\"rss\":$rss_b}"
+    done <<EOF
+$PS_OUT
+EOF
+  fi
+fi
+
+NET_JSON=""
+if [ -r /proc/net/dev ]; then
+  while IFS= read -r line; do
+    case "$line" in
+      *:*)
+        iface=${line%%:*}
+        iface=$(echo "$iface" | $TR_BIN -d ' ')
+        case "$iface" in
+          lo|LO) continue ;;
+        esac
+        rest=${line#*:}
+        set -- $rest
+        rx=$1; tx=$9
+        case "$rx" in *[!0-9]*|"") rx=0 ;; esac
+        case "$tx" in *[!0-9]*|"") tx=0 ;; esac
+        [ -n "$NET_JSON" ] && NET_JSON="$NET_JSON,"
+        NET_JSON="$NET_JSON\"$iface\":{\"rx\":$rx,\"tx\":$tx}"
+        ;;
+    esac
+  done < /proc/net/dev
+fi
+[ -z "$NET_JSON" ] && NET_JSON="\"eth0\":{\"rx\":0,\"tx\":0}"
+TS=$(date +%s 2>/dev/null || echo 0)
+printf '{"ts":%s,"uptime_s":%s,"load":{"l1":%s,"l5":%s,"l15":%s},"cpu":{"total":%s,"idle":%s,"cores":%s},"mem":{"total":%s,"used":%s,"available":%s,"percent":%s},"swap":{"total":%s,"used":%s,"percent":%s},"disk":{"mount":"%s","total":%s,"used":%s,"free":%s,"percent":%s},"disks":%s,"net_bytes":{%s},"disk_bytes":{"read":%s,"write":%s},"temp_c":null,"top":[%s],"docker":{"available":false,"version":null,"error":"legacy collector","running":0,"paused":0,"stopped":0,"containers":[]},"openclaw":{"available":false,"error":"legacy collector","version":null,"update_channel":null,"gateway":null,"service":null,"sessions_count":0,"default_model":null,"agents":[],"tasks":null,"channels":[],"recent_sessions":[]}}\n' \
+  "$TS" "$UP" "$L1" "$L5" "$L15" "$CPU_TOTAL" "$CPU_IDLE" "$CORES" \
+  "$MEM_TOTAL" "$MEM_USED" "$MEM_AVAIL" "$MEM_PCT" \
+  "$SWAP_T" "$SWAP_U" "$SWAP_PCT" \
+  "$DISK_M" "$DISK_T" "$DISK_U" "$DISK_A" "$DISK_P" \
+  "$DISKS_JSON" \
+  "$NET_JSON" "$DISK_READ" "$DISK_WRITE" "$TOP_JSON"
+"""#
+
+    static var legacyShellRemoteCommand: String {
+        #"export PATH="/bin:/usr/bin:/sbin:/usr/sbin:$PATH"; /bin/sh -s"#
     }
 
     static func extractJSONObject(from raw: String) -> String? {
