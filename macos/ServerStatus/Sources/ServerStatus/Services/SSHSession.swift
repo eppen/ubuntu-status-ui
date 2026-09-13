@@ -20,14 +20,16 @@ actor SSHSession {
         await close()
 
         #if canImport(AppKit)
-        // OpenSSH 3.x–5.x (e.g. 192.168.3.2 / 3.7.1) can hang inside Citadel Group1 KEX.
-        // A throwing TaskGroup timeout still waits for that hung task, so skip Citadel entirely.
+        // OpenSSH 3.x–5.x (e.g. 192.168.3.2 / 3.7.1) hangs inside Citadel Group1 KEX.
+        // Unknown banners also skip Citadel: a hung KEX never reaches ProcessSSH.
         let banner = await Self.peekSSHIdentification(host: profile.host, port: profile.port)
-        if let banner, Self.isLegacyOpenSSH(banner) {
+        let legacy = banner.map(Self.isLegacyOpenSSH) ?? true
+        if legacy {
             preferPythonCollector = false
             try await connectViaProcessSSH(profile: profile, password: password, privateKeyPath: privateKeyPath)
             return
         }
+        preferPythonCollector = true
         #endif
 
         do {
@@ -41,9 +43,7 @@ actor SSHSession {
             return
         } catch {
             #if canImport(AppKit)
-            // Modern hosts (Ubuntu) still have python3; prefer that collector if Citadel failed.
             do {
-                preferPythonCollector = true
                 try await connectViaProcessSSH(profile: profile, password: password, privateKeyPath: privateKeyPath)
                 return
             } catch {
@@ -93,26 +93,15 @@ actor SSHSession {
 
     #if canImport(AppKit)
     private func fetchRawMetricsViaProcessSSH() async throws -> RawMetricsPayload {
-        // Modern Ubuntu falling back to ProcessSSH still has python3 (temp / docker / openclaw).
-        // Ancient OpenSSH 1–5 often lacks it; prefer POSIX sh there.
+        // Modern OpenSSH (Ubuntu): Python has temp / docker / openclaw.
+        // OpenSSH 3.x: a 30KB Python stdin script hangs sshd — never try it.
         if preferPythonCollector, let pyPayload = await fetchPythonMetricsViaStdin() {
             return pyPayload
         }
-
         if let shPayload = await fetchShellMetricsViaStdin() {
-            if preferPythonCollector {
-                return shPayload
-            }
-            if shPayload.disk.total > 0 || !shPayload.top.isEmpty {
-                return shPayload
-            }
-            if let pyPayload = await fetchPythonMetricsViaStdin() {
-                return pyPayload
-            }
             return shPayload
         }
-
-        if let pyPayload = await fetchPythonMetricsViaStdin() {
+        if preferPythonCollector, let pyPayload = await fetchPythonMetricsViaStdin() {
             return pyPayload
         }
         throw SSHSessionError.invalidMetrics("无法采集指标（legacy shell / python 均不可用）")
@@ -299,7 +288,9 @@ actor SSHSession {
         var buf = [UInt8](repeating: 0, count: 256)
         let n = recv(fd, &buf, buf.count, 0)
         guard n > 0 else { return nil }
-        return String(bytes: buf.prefix(Int(n)), encoding: .utf8)
+        let bytes = buf.prefix(Int(n))
+        return String(bytes: bytes, encoding: .utf8)
+            ?? String(bytes: bytes, encoding: .isoLatin1)
     }
 
     private static func isLegacyOpenSSH(_ banner: String) -> Bool {

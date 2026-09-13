@@ -1195,36 +1195,25 @@ if [ -r /proc/net/dev ]; then
 fi
 [ -z "$NET_JSON" ] && NET_JSON="\"eth0\":{\"rx\":0,\"tx\":0}"
 
-# --- temperature (sysfs milli-Celsius); prefer CPU hwmon then any sensor ---
+# --- temperature (POSIX / BusyBox 1.7: no glob groups, no nested pipelines) ---
 TEMP_C=null
 if [ -n "$AWK_BIN" ]; then
-  TEMP_C=$(
-    {
-      for d in /sys/class/hwmon/hwmon*; do
-        [ -r "$d/name" ] || continue
-        n=$(cat "$d/name" 2>/dev/null)
-        case "$n" in
-          coretemp|k10temp|k8temp|zenpower|cpu|cpu_thermal|soc_thermal|x86_pkg_temp)
-            for f in "$d"/temp*_input; do
-              [ -r "$f" ] || continue
-              cat "$f" 2>/dev/null
-            done
-            ;;
-        esac
-      done
-      for f in /sys/class/hwmon/hwmon*/temp*_input /sys/class/thermal/thermal_zone*/temp; do
-        [ -r "$f" ] || continue
-        cat "$f" 2>/dev/null
-      done
-    } 2>/dev/null | $AWK_BIN '
-      NF>=1 {
-        v=$1+0
-        if (v>200) v=v/1000
-        if (v>=-20 && v<=130) { printf "%.1f", v; ok=1; exit }
-      }
-      END { if (!ok) printf "null" }
-    '
-  )
+  TRAW=""
+  for f in /sys/class/hwmon/hwmon0/temp1_input /sys/class/hwmon/hwmon1/temp1_input /sys/class/hwmon/hwmon2/temp1_input /sys/class/hwmon/hwmon3/temp1_input /sys/class/hwmon/hwmon4/temp1_input /sys/class/hwmon/hwmon5/temp1_input /sys/class/thermal/thermal_zone0/temp; do
+    if [ -r "$f" ]; then
+      TRAW=$(cat "$f" 2>/dev/null)
+      if [ -n "$TRAW" ]; then
+        TEMP_C=$(echo "$TRAW" | $AWK_BIN '{
+          v=$1+0
+          if (v>200) v=v/1000
+          if (v>=-20 && v<=130) printf "%.1f"
+          else printf "null"
+          exit
+        }')
+        break
+      fi
+    fi
+  done
   [ -n "$TEMP_C" ] || TEMP_C=null
 fi
 TS=$(date +%s 2>/dev/null || echo 0)
