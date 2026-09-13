@@ -11,6 +11,8 @@ actor SSHSession {
     private var client: SSHClient?
     #if canImport(AppKit)
     private var processClient: ProcessSSHSession?
+    /// False for OpenSSH 1–5 (Python collector may hang). True when ProcessSSH is only a modern-host fallback.
+    private var preferPythonCollector = false
     #endif
     private(set) var isConnected = false
 
@@ -22,6 +24,7 @@ actor SSHSession {
         // A throwing TaskGroup timeout still waits for that hung task, so skip Citadel entirely.
         let banner = await Self.peekSSHIdentification(host: profile.host, port: profile.port)
         if let banner, Self.isLegacyOpenSSH(banner) {
+            preferPythonCollector = false
             try await connectViaProcessSSH(profile: profile, password: password, privateKeyPath: privateKeyPath)
             return
         }
@@ -38,8 +41,9 @@ actor SSHSession {
             return
         } catch {
             #if canImport(AppKit)
-            // Ancient OpenSSH (e.g. 3.7 on 192.168.3.2) often fails Citadel/NIOSSH negotiation.
+            // Modern hosts (Ubuntu) still have python3; prefer that collector if Citadel failed.
             do {
+                preferPythonCollector = true
                 try await connectViaProcessSSH(profile: profile, password: password, privateKeyPath: privateKeyPath)
                 return
             } catch {
@@ -89,49 +93,58 @@ actor SSHSession {
 
     #if canImport(AppKit)
     private func fetchRawMetricsViaProcessSSH() async throws -> RawMetricsPayload {
-        // ProcessSSH is the ancient-OpenSSH fallback: prefer POSIX sh first (no python3 / tiny tools).
-        if let shData = RemoteCollectorScript.legacyShellSource.data(using: .utf8) {
-            do {
-                let shOut = try await execute(
-                    RemoteCollectorScript.legacyShellRemoteCommand,
-                    stdinData: shData
-                )
-                if let payload = try? Self.decodeMetrics(from: shOut.stdout, stderr: shOut.stderr) {
-                    // Prefer shell result even if disk/top empty; try python only when shell JSON missing.
-                    if payload.disk.total > 0 || !payload.top.isEmpty {
-                        return payload
-                    }
-                    // Keep as fallback if python also fails
-                    if let pyData = RemoteCollectorScript.source.data(using: .utf8) {
-                        do {
-                            let pyOut = try await execute(
-                                RemoteCollectorScript.pythonStdinRemoteCommand,
-                                stdinData: pyData
-                            )
-                            if let pyPayload = try? Self.decodeMetrics(from: pyOut.stdout, stderr: pyOut.stderr),
-                               pyPayload.disk.total > 0 || !pyPayload.top.isEmpty {
-                                return pyPayload
-                            }
-                        } catch {
-                            // ignore
-                        }
-                    }
-                    return payload
-                }
-            } catch {
-                // Fall through to python
-            }
+        // Modern Ubuntu falling back to ProcessSSH still has python3 (temp / docker / openclaw).
+        // Ancient OpenSSH 1–5 often lacks it; prefer POSIX sh there.
+        if preferPythonCollector, let pyPayload = await fetchPythonMetricsViaStdin() {
+            return pyPayload
         }
 
-        if let pyData = RemoteCollectorScript.source.data(using: .utf8) {
+        if let shPayload = await fetchShellMetricsViaStdin() {
+            if preferPythonCollector {
+                return shPayload
+            }
+            if shPayload.disk.total > 0 || !shPayload.top.isEmpty {
+                return shPayload
+            }
+            if let pyPayload = await fetchPythonMetricsViaStdin() {
+                return pyPayload
+            }
+            return shPayload
+        }
+
+        if let pyPayload = await fetchPythonMetricsViaStdin() {
+            return pyPayload
+        }
+        throw SSHSessionError.invalidMetrics("无法采集指标（legacy shell / python 均不可用）")
+    }
+
+    private func fetchPythonMetricsViaStdin() async -> RawMetricsPayload? {
+        guard let pyData = RemoteCollectorScript.source.data(using: .utf8) else { return nil }
+        do {
             let pyOut = try await execute(
                 RemoteCollectorScript.pythonStdinRemoteCommand,
                 stdinData: pyData
             )
-            return try Self.decodeMetrics(from: pyOut.stdout, stderr: pyOut.stderr)
+            guard let payload = try? Self.decodeMetrics(from: pyOut.stdout, stderr: pyOut.stderr) else {
+                return nil
+            }
+            return payload
+        } catch {
+            return nil
         }
+    }
 
-        throw SSHSessionError.invalidMetrics("无法采集指标（legacy shell / python 均不可用）")
+    private func fetchShellMetricsViaStdin() async -> RawMetricsPayload? {
+        guard let shData = RemoteCollectorScript.legacyShellSource.data(using: .utf8) else { return nil }
+        do {
+            let shOut = try await execute(
+                RemoteCollectorScript.legacyShellRemoteCommand,
+                stdinData: shData
+            )
+            return try? Self.decodeMetrics(from: shOut.stdout, stderr: shOut.stderr)
+        } catch {
+            return nil
+        }
     }
 
     private func execute(_ command: String, stdinData: Data, maxBytes: Int = 512 * 1024) async throws -> (stdout: String, stderr: String) {
@@ -165,6 +178,7 @@ actor SSHSession {
             await processClient.close()
             self.processClient = nil
         }
+        preferPythonCollector = false
         #endif
         if let client {
             try? await client.close()

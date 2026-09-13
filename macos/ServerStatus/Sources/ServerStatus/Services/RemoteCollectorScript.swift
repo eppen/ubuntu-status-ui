@@ -416,6 +416,34 @@ def disk_bytes():
             continue
     return {"read": read_b, "write": write_b}
 
+def _parse_temp_raw(raw):
+    raw = (raw or "").strip()
+    if not raw:
+        return None
+    try:
+        v = float(raw.split()[0])
+    except ValueError:
+        return None
+    if v > 200:
+        v /= 1000.0
+    if -20 <= v <= 130:
+        return round(v, 1)
+    return None
+
+def _hwmon_temp_inputs(base):
+    paths = []
+    for folder in (base, os.path.join(base, "device")):
+        if not os.path.isdir(folder):
+            continue
+        try:
+            names = os.listdir(folder)
+        except OSError:
+            continue
+        for fn in sorted(names):
+            if re.match(r"^temp\d+_input$", fn):
+                paths.append(os.path.join(folder, fn))
+    return paths
+
 def temp_c():
     if IS_DARWIN:
         # Best-effort; usually unavailable without privileged tools.
@@ -440,30 +468,44 @@ def temp_c():
                 except ValueError:
                     pass
         return None
-    candidates = []
+    cpu_names = (
+        "coretemp", "k10temp", "k8temp", "zenpower", "cpu",
+        "cpu_thermal", "soc_thermal", "x86_pkg_temp",
+    )
+    cpu_paths, other_paths = [], []
     hw = "/sys/class/hwmon"
     if os.path.isdir(hw):
-        for name in sorted(os.listdir(hw)):
+        try:
+            chips = sorted(os.listdir(hw))
+        except OSError:
+            chips = []
+        for name in chips:
             base = os.path.join(hw, name)
-            for fn in ("temp1_input", "temp2_input", "temp3_input"):
-                candidates.append(os.path.join(base, fn))
+            chip = read_text(os.path.join(base, "name")).strip().lower()
+            inputs = _hwmon_temp_inputs(base)
+            if chip in cpu_names or "coretemp" in chip or chip.startswith("k10"):
+                cpu_paths.extend(inputs)
+            else:
+                other_paths.extend(inputs)
+    thermal_paths = []
     th = "/sys/class/thermal"
     if os.path.isdir(th):
-        for name in sorted(os.listdir(th)):
-            if name.startswith("thermal_zone"):
-                candidates.append(os.path.join(th, name, "temp"))
-    for path in candidates:
-        raw = read_text(path).strip()
-        if not raw:
-            continue
         try:
-            v = float(raw)
-        except ValueError:
-            continue
-        if v > 200:
-            v /= 1000.0
-        if -20 <= v <= 130:
-            return round(v, 1)
+            zones = sorted(os.listdir(th))
+        except OSError:
+            zones = []
+        for name in zones:
+            if name.startswith("thermal_zone"):
+                thermal_paths.append(os.path.join(th, name, "temp"))
+    for path in cpu_paths + other_paths + thermal_paths:
+        v = _parse_temp_raw(read_text(path))
+        if v is not None:
+            return v
+    raw = sh_ok(["sensors", "-u"])
+    for m in re.finditer(r"temp\d+_input:\s*([0-9.]+)", raw):
+        v = _parse_temp_raw(m.group(1))
+        if v is not None:
+            return v
     return None
 
 def top_procs(limit=12):
@@ -1152,14 +1194,47 @@ if [ -r /proc/net/dev ]; then
   done < /proc/net/dev
 fi
 [ -z "$NET_JSON" ] && NET_JSON="\"eth0\":{\"rx\":0,\"tx\":0}"
+
+# --- temperature (sysfs milli-Celsius); prefer CPU hwmon then any sensor ---
+TEMP_C=null
+if [ -n "$AWK_BIN" ]; then
+  TEMP_C=$(
+    {
+      for d in /sys/class/hwmon/hwmon*; do
+        [ -r "$d/name" ] || continue
+        n=$(cat "$d/name" 2>/dev/null)
+        case "$n" in
+          coretemp|k10temp|k8temp|zenpower|cpu|cpu_thermal|soc_thermal|x86_pkg_temp)
+            for f in "$d"/temp*_input; do
+              [ -r "$f" ] || continue
+              cat "$f" 2>/dev/null
+            done
+            ;;
+        esac
+      done
+      for f in /sys/class/hwmon/hwmon*/temp*_input /sys/class/thermal/thermal_zone*/temp; do
+        [ -r "$f" ] || continue
+        cat "$f" 2>/dev/null
+      done
+    } 2>/dev/null | $AWK_BIN '
+      NF>=1 {
+        v=$1+0
+        if (v>200) v=v/1000
+        if (v>=-20 && v<=130) { printf "%.1f", v; ok=1; exit }
+      }
+      END { if (!ok) printf "null" }
+    '
+  )
+  [ -n "$TEMP_C" ] || TEMP_C=null
+fi
 TS=$(date +%s 2>/dev/null || echo 0)
-printf '{"ts":%s,"uptime_s":%s,"load":{"l1":%s,"l5":%s,"l15":%s},"cpu":{"total":%s,"idle":%s,"cores":%s},"mem":{"total":%s,"used":%s,"available":%s,"percent":%s},"swap":{"total":%s,"used":%s,"percent":%s},"disk":{"mount":"%s","total":%s,"used":%s,"free":%s,"percent":%s},"disks":%s,"net_bytes":{%s},"disk_bytes":{"read":%s,"write":%s},"temp_c":null,"top":[%s],"docker":{"available":false,"version":null,"error":"legacy collector","running":0,"paused":0,"stopped":0,"containers":[]},"openclaw":{"available":false,"error":"legacy collector","version":null,"update_channel":null,"gateway":null,"service":null,"sessions_count":0,"default_model":null,"agents":[],"tasks":null,"channels":[],"recent_sessions":[]}}\n' \
+printf '{"ts":%s,"uptime_s":%s,"load":{"l1":%s,"l5":%s,"l15":%s},"cpu":{"total":%s,"idle":%s,"cores":%s},"mem":{"total":%s,"used":%s,"available":%s,"percent":%s},"swap":{"total":%s,"used":%s,"percent":%s},"disk":{"mount":"%s","total":%s,"used":%s,"free":%s,"percent":%s},"disks":%s,"net_bytes":{%s},"disk_bytes":{"read":%s,"write":%s},"temp_c":%s,"top":[%s],"docker":{"available":false,"version":null,"error":"legacy collector","running":0,"paused":0,"stopped":0,"containers":[]},"openclaw":{"available":false,"error":"legacy collector","version":null,"update_channel":null,"gateway":null,"service":null,"sessions_count":0,"default_model":null,"agents":[],"tasks":null,"channels":[],"recent_sessions":[]}}\n' \
   "$TS" "$UP" "$L1" "$L5" "$L15" "$CPU_TOTAL" "$CPU_IDLE" "$CORES" \
   "$MEM_TOTAL" "$MEM_USED" "$MEM_AVAIL" "$MEM_PCT" \
   "$SWAP_T" "$SWAP_U" "$SWAP_PCT" \
   "$DISK_M" "$DISK_T" "$DISK_U" "$DISK_A" "$DISK_P" \
   "$DISKS_JSON" \
-  "$NET_JSON" "$DISK_READ" "$DISK_WRITE" "$TOP_JSON"
+  "$NET_JSON" "$DISK_READ" "$DISK_WRITE" "$TEMP_C" "$TOP_JSON"
 """#
 
     static var legacyShellRemoteCommand: String {
