@@ -4,5 +4,11 @@
     "last_updated": "2026-09-13T22:01:22.67662+08:00",
     "event": "SessionEnd",
     "directory_name": "ServerStatus"
+  },
+  "ServerStatus:7357": {
+    "state": 3,
+    "last_updated": "2026-09-13T22:31:16.134458+08:00",
+    "event": "Stop",
+    "directory_name": "ServerStatus"
   }
 }

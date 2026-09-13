@@ -418,8 +418,14 @@ def disk_bytes():
 
 def temp_c():
     if IS_DARWIN:
-        # Best-effort; usually unavailable without privileged tools
+        # Best-effort; usually unavailable without privileged tools.
+        # smctemp reads SMC via private APIs and works on both Apple
+        # Silicon and Intel without sudo; osx-cpu-temp is the legacy
+        # Intel-only fallback.
         for cmd in (
+            ["smctemp", "-c"],
+            ["/opt/homebrew/bin/smctemp", "-c"],
+            ["/usr/local/bin/smctemp", "-c"],
             ["osx-cpu-temp"],
             ["/opt/homebrew/bin/osx-cpu-temp"],
             ["/usr/local/bin/osx-cpu-temp"],
