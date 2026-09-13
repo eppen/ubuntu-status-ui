@@ -11,7 +11,7 @@ let package = Package(
         .executable(name: "ServerStatus", targets: ["ServerStatus"])
     ],
     dependencies: [
-        .package(url: "https://github.com/eppen/Citadel.git", revision: "5d0ad3a57696d091670aae65b64bcdea45206a65")
+        .package(url: "https://github.com/eppen/Citadel.git", revision: "6b37d544f15d87c4eb71d7e2e3f446a5cca786e3")
     ],
     targets: [
         .executableTarget(
