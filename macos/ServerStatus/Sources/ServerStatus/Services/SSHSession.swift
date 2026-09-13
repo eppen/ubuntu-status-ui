@@ -3,6 +3,9 @@ import Citadel
 import Crypto
 import NIO
 import NIOSSH
+#if canImport(Darwin)
+import Darwin
+#endif
 
 actor SSHSession {
     private var client: SSHClient?
@@ -14,28 +17,30 @@ actor SSHSession {
     func connect(profile: ServerProfile, password: String?, privateKeyPath: String?) async throws {
         await close()
 
+        #if canImport(AppKit)
+        // OpenSSH 3.x–5.x (e.g. 192.168.3.2 / 3.7.1) can hang inside Citadel Group1 KEX.
+        // A throwing TaskGroup timeout still waits for that hung task, so skip Citadel entirely.
+        let banner = await Self.peekSSHIdentification(host: profile.host, port: profile.port)
+        if let banner, Self.isLegacyOpenSSH(banner) {
+            try await connectViaProcessSSH(profile: profile, password: password, privateKeyPath: privateKeyPath)
+            return
+        }
+        #endif
+
         do {
-            try await withThrowingTaskGroup(of: Void.self) { group in
-                group.addTask {
-                    try await self.connectCitadel(profile: profile, password: password, privateKeyPath: privateKeyPath)
-                }
-                group.addTask {
-                    try await Task.sleep(nanoseconds: 8_000_000_000)
-                    throw SSHSessionError.connectFailed("Citadel 连接超时，尝试兼容模式…")
-                }
-                try await group.next()!
-                group.cancelAll()
-            }
+            let connected = try await connectCitadelWithTimeout(
+                profile: profile,
+                password: password,
+                privateKeyPath: privateKeyPath
+            )
+            self.client = connected
             isConnected = true
             return
         } catch {
             #if canImport(AppKit)
             // Ancient OpenSSH (e.g. 3.7 on 192.168.3.2) often fails Citadel/NIOSSH negotiation.
-            let process = ProcessSSHSession()
             do {
-                try await process.connect(profile: profile, password: password, privateKeyPath: privateKeyPath)
-                self.processClient = process
-                self.isConnected = true
+                try await connectViaProcessSSH(profile: profile, password: password, privateKeyPath: privateKeyPath)
                 return
             } catch {
                 throw SSHSessionError.connectFailed(Self.describe(error))
@@ -45,6 +50,15 @@ actor SSHSession {
             #endif
         }
     }
+
+    #if canImport(AppKit)
+    private func connectViaProcessSSH(profile: ServerProfile, password: String?, privateKeyPath: String?) async throws {
+        let process = ProcessSSHSession()
+        try await process.connect(profile: profile, password: password, privateKeyPath: privateKeyPath)
+        self.processClient = process
+        self.isConnected = true
+    }
+    #endif
 
     func execute(_ command: String, maxBytes: Int = 512 * 1024) async throws -> String {
         #if canImport(AppKit)
@@ -161,7 +175,42 @@ actor SSHSession {
 
     // MARK: - Citadel
 
-    private func connectCitadel(profile: ServerProfile, password: String?, privateKeyPath: String?) async throws {
+    /// Race Citadel against a timeout without waiting for a hung, non-cancellable KEX.
+    private func connectCitadelWithTimeout(
+        profile: ServerProfile,
+        password: String?,
+        privateKeyPath: String?
+    ) async throws -> SSHClient {
+        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<SSHClient, Error>) in
+            let gate = ResumeOnce()
+            Task {
+                do {
+                    let client = try await self.connectCitadel(
+                        profile: profile,
+                        password: password,
+                        privateKeyPath: privateKeyPath
+                    )
+                    if gate.claim() {
+                        cont.resume(returning: client)
+                    } else {
+                        try? await client.close()
+                    }
+                } catch {
+                    if gate.claim() {
+                        cont.resume(throwing: error)
+                    }
+                }
+            }
+            Task {
+                try? await Task.sleep(nanoseconds: 6_000_000_000)
+                if gate.claim() {
+                    cont.resume(throwing: SSHSessionError.connectFailed("Citadel 连接超时，尝试兼容模式…"))
+                }
+            }
+        }
+    }
+
+    private func connectCitadel(profile: ServerProfile, password: String?, privateKeyPath: String?) async throws -> SSHClient {
         let auth: SSHAuthenticationMethod
         switch profile.authMethod {
         case .password:
@@ -185,8 +234,69 @@ actor SSHSession {
         )
         settings.algorithms = SSHAlgorithms.all
 
-        let connected = try await SSHClient.connect(to: settings)
-        self.client = connected
+        return try await SSHClient.connect(to: settings)
+    }
+
+    /// TCP-only SSH identification string, e.g. `SSH-2.0-OpenSSH_3.7.1p2`.
+    private static func peekSSHIdentification(host: String, port: Int, timeoutMs: Int32 = 2000) async -> String? {
+        await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                continuation.resume(returning: peekSSHIdentificationSync(host: host, port: port, timeoutMs: timeoutMs))
+            }
+        }
+    }
+
+    private static func peekSSHIdentificationSync(host: String, port: Int, timeoutMs: Int32) -> String? {
+        var hints = addrinfo()
+        hints.ai_family = AF_UNSPEC
+        hints.ai_socktype = SOCK_STREAM
+        hints.ai_protocol = IPPROTO_TCP
+
+        var result: UnsafeMutablePointer<addrinfo>?
+        guard getaddrinfo(host, String(port), &hints, &result) == 0, let info = result else {
+            return nil
+        }
+        defer { freeaddrinfo(info) }
+
+        let fd = socket(info.pointee.ai_family, info.pointee.ai_socktype, info.pointee.ai_protocol)
+        guard fd >= 0 else { return nil }
+        defer { Darwin.close(fd) }
+
+        let flags = fcntl(fd, F_GETFL, 0)
+        guard flags >= 0 else { return nil }
+        _ = fcntl(fd, F_SETFL, flags | O_NONBLOCK)
+
+        let conn = Darwin.connect(fd, info.pointee.ai_addr, info.pointee.ai_addrlen)
+        if conn != 0 && errno != EINPROGRESS {
+            return nil
+        }
+
+        var pfd = pollfd(fd: fd, events: Int16(POLLOUT), revents: 0)
+        guard poll(&pfd, 1, timeoutMs) > 0 else { return nil }
+
+        var soError: Int32 = 0
+        var soLen = socklen_t(MemoryLayout<Int32>.size)
+        getsockopt(fd, SOL_SOCKET, SO_ERROR, &soError, &soLen)
+        guard soError == 0 else { return nil }
+
+        pfd = pollfd(fd: fd, events: Int16(POLLIN), revents: 0)
+        guard poll(&pfd, 1, timeoutMs) > 0 else { return nil }
+
+        var buf = [UInt8](repeating: 0, count: 256)
+        let n = recv(fd, &buf, buf.count, 0)
+        guard n > 0 else { return nil }
+        return String(bytes: buf.prefix(Int(n)), encoding: .utf8)
+    }
+
+    private static func isLegacyOpenSSH(_ banner: String) -> Bool {
+        // SSH-1.x, or OpenSSH 1–5: typically only group1 / ssh-rsa / CBC.
+        if banner.contains("SSH-1.") { return true }
+        guard let range = banner.range(of: "OpenSSH_", options: .caseInsensitive) else {
+            return false
+        }
+        let digits = banner[range.upperBound...].prefix(while: { $0.isNumber })
+        guard let major = Int(digits) else { return false }
+        return major < 6
     }
 
     private static func makePrivateKeyAuth(username: String, path: String) throws -> SSHAuthenticationMethod {
@@ -215,6 +325,19 @@ actor SSHSession {
             return d
         }
         return error.localizedDescription
+    }
+}
+
+private final class ResumeOnce: @unchecked Sendable {
+    private let lock = NSLock()
+    private var done = false
+
+    func claim() -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        if done { return false }
+        done = true
+        return true
     }
 }
 
@@ -341,6 +464,8 @@ actor ProcessSSHSession {
             "-o", "PubkeyAcceptedAlgorithms=+ssh-rsa",
             "-o", "Ciphers=+aes128-cbc,aes192-cbc,aes256-cbc,3des-cbc",
             "-o", "MACs=+hmac-sha1,hmac-md5",
+            // OpenSSH 3.7 host keys are often 1024-bit RSA.
+            "-o", "RequiredRSASize=1024",
         ]
 
         if let controlPath {
