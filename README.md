@@ -27,3 +27,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now ubuntu-status-ui
 sudo systemctl status ubuntu-status-ui --no-pager
 ```
+
+## 许可证
+
+本项目采用 [GNU General Public License v2.0](LICENSE)（GPLv2）授权。
