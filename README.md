@@ -1,5 +1,7 @@
 # Ubuntu 状态面板（类似 neoserver 的图形界面）
 
+[English](README.en.md)
+
 一个轻量 Web UI，用来查看 Ubuntu 的 CPU/内存/磁盘/网络/I/O/温度/负载，并展示 Top 进程。
 
 ## 运行（在 Ubuntu 服务器上）
